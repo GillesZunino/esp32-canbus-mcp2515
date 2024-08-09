@@ -10,5 +10,5 @@ debug.log
 esp-idf-vscode-generated.gdb
 
 # ESP-IDF build intermediates and output
-/managed_components/
-/build/
+**/managed_components/** */
+**/build/**

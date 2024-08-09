@@ -1,0 +1,10 @@
+version: "1.0.0"
+description: "Write CAN frames with ESP32 CAN Bus v2.0 driver for MCP2515"
+tags:
+  - canbus
+  - CAN
+  - MCP2515
+dependencies:
+  espressif/canbus_mcp2515:
+    version: '~1'
+    override_path: '../../../'

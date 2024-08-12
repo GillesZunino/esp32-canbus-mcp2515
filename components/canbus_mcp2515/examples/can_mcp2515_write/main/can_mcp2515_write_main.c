@@ -36,10 +36,6 @@ void app_main(void) {
 
         .data2_io_num = GPIO_NUM_NC,
         .data3_io_num = GPIO_NUM_NC,
-        .data4_io_num = GPIO_NUM_NC,
-        .data5_io_num = GPIO_NUM_NC,
-        .data6_io_num = GPIO_NUM_NC,
-        .data7_io_num = GPIO_NUM_NC,
 
         .max_transfer_sz = SOC_SPI_MAXIMUM_BUFFER_SIZE,
         .flags = SPICOMMON_BUSFLAG_MASTER,
@@ -51,9 +47,11 @@ void app_main(void) {
     mcp2515_config_t mcp2515InitConfig = {
         .spi_cfg = {
             .host_id = SPI_HOSTID,
+            .mode = 0,
             .clock_source = SPI_CLK_SRC_DEFAULT,
             .clock_speed_hz = 10 * 1000000,
-            .spics_io_num = CS_PIN
+            .spics_io_num = CS_PIN,
+            .queue_size = 8
         }
     };
     ESP_ERROR_CHECK(canbus_mcp2515_init(&mcp2515InitConfig, &can_mcp2515_handle));

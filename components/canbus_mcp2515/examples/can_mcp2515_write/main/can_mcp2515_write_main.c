@@ -14,7 +14,9 @@
 const char* TAG = "mcp2515_main";
 
 //
-// NOTE: For maximum performance, choose "native" SPI pins to avoid the default GPIO matrix routing
+// NOTE: For maximum performance, prefer IO MUX  over GPIO Matrix routing
+//  * When using GPIO Matrix routing, the SPI bus speed is limited to 20 MHz and it may be necessary to adjust spi_device_interface_config_t::input_delay_ns
+//  * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/spi_master.html#gpio-matrix-routing
 //
 const spi_host_device_t SPI_HOSTID = SPI2_HOST;
 
@@ -50,6 +52,10 @@ void app_main(void) {
             .mode = 0,
             .clock_source = SPI_CLK_SRC_DEFAULT,
             .clock_speed_hz = 10 * 1000000,
+            
+            // NOTE: This may need adjustment when using GPIO Matrix routing
+            //.input_delay_ns = 50,
+
             .spics_io_num = CS_PIN,
             .queue_size = 8
         }

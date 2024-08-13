@@ -14,4 +14,4 @@ esp-idf-vscode-generated.gdb
 **/build/**
 
 # ESP-IDF component manager lock file
-examples/**/dependencies.lock
+**/dependencies.lock

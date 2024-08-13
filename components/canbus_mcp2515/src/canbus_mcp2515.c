@@ -293,11 +293,29 @@ esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_
 }
 
 esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data, const uint8_t mask) {
-    // TODO: Validate register is allowed for modification
-
-    // Handle must have been initiallized, which means we have configured the SPI device
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_STATE;
+    }
+
+    // Ensure the register can be modified via BITMOD
+    switch (mcp2515Register) {
+        case MCP2515_BFPCTRL:
+        case MCP2515_TXRTSCTRL:
+        case MCP2515_CANCTRL:
+        case MCP2515_CNF3:
+        case MCP2515_CNF2:
+        case MCP2515_CNF1:
+        case MCP2515_CANINTE:
+        case MCP2515_CANINTF:
+        case MCP2515_EFLG:
+        case MCP2515_TXB0CTRL:
+        case MCP2515_TXB1CTRL:
+        case MCP2515_TXB2CTRL:
+        case MCP2515_RXB0CTRL:
+        case MCP2515_RXB1CTRL:
+            break;
+        default:
+            return ESP_ERR_INVALID_ARG;
     }
 
     //

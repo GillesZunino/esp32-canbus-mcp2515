@@ -1,0 +1,11 @@
+version: "1.0.0"
+description: "ESP32 CAN Bus v2.0 driver for MCP2515."
+url: "https://gilleszunino.github.io/esp32-canbus-mcp2515"
+repository: "https://github.com/GillesZunino/esp32-canbus-mcp2515"
+documentation: "https://gilleszunino.github.io/esp32-canbus-mcp2515"
+license: "MIT"
+
+dependencies:
+  idf:
+    version: ">5.0.0"
+

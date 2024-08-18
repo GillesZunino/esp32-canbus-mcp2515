@@ -83,7 +83,7 @@ void app_main(void) {
     // Configure MCP2515 in loopback mode
     const TickType_t ModeChangeDelay = pdMS_TO_TICKS(20);
     const mcp2515_mode_t DesiredMCP1515Mode = MCP2515_MODE_LOOPBACK;
-    ESP_LOGI(TAG, "Setting MCP2515 in mode %d", DesiredMCP1515Mode);
+    ESP_LOGI(TAG, "Set MCP2515 in mode %d", DesiredMCP1515Mode);
     ESP_ERROR_CHECK(canbus_mcp2515_set_mode(can_mcp2515_handle, DesiredMCP1515Mode, ModeChangeDelay));
 
     // Read mode and log

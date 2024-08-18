@@ -60,9 +60,11 @@ void app_main(void) {
             .queue_size = 8
         }
     };
+    ESP_LOGI(TAG, "Initialize MCP2515 driver");
     ESP_ERROR_CHECK(canbus_mcp2515_init(&mcp2515InitConfig, &can_mcp2515_handle));
 
     // Reset MCP2515 after power on - This automatically sets the MCP2515 in configuration mode
+    ESP_LOGI(TAG, "Reset MCP2515 after power on");
     ESP_ERROR_CHECK(canbus_mcp2515_reset(can_mcp2515_handle));
 
     // Configure MCP2515 CAN bit timings - See CAN bit timing calculator in README
@@ -75,9 +77,11 @@ void app_main(void) {
         .phase_seg1 = 1,
         .phase_seg2 = 1
     };
+    ESP_LOGI(TAG, "Configure MCP2515 bit rate");
     ESP_ERROR_CHECK(canbus_mcp2515_set_bitrate(can_mcp2515_handle, &bitTimingConfig));
 
     // Set the MCP2515 in loopback mode for testing with one node only
+    ESP_LOGI(TAG, "Set MCP2515 to MCP2515_MODE_NORMAL");
     ESP_ERROR_CHECK(canbus_mcp2515_set_mode(can_mcp2515_handle, MCP2515_MODE_NORMAL, 50));
 
     // Transmit a few CAN frames
@@ -95,9 +99,10 @@ void app_main(void) {
         frame.data[1] = frameCount;
 
         // Send frame
+        ESP_LOGI(TAG, "Send frame with index %d", frameCount);
         esp_err_t err = canbus_mcp2515_send(can_mcp2515_handle, &frame);
         if (err != ESP_OK) {
-            ESP_LOGE(TAG, "Error sending frame with index %d: %d", frameCount, err);
+            ESP_LOGE(TAG, "Failed to send frame with index %d - Error: %d", frameCount, err);
         }
 
         vTaskDelay(DelayBetweenFrames);

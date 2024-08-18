@@ -40,7 +40,7 @@ void app_main(void) {
         .data3_io_num = GPIO_NUM_NC,
 
         .max_transfer_sz = SOC_SPI_MAXIMUM_BUFFER_SIZE,
-        .flags = SPICOMMON_BUSFLAG_MASTER | SPICOMMON_BUSFLAG_GPIO_PINS,
+        .flags = SPICOMMON_BUSFLAG_MASTER,
         .isr_cpu_id = ESP_INTR_CPU_AFFINITY_AUTO
     };
     ESP_ERROR_CHECK(spi_bus_initialize(SPI_HOSTID, &spiBusConfig, SPI_DMA_CH_AUTO));

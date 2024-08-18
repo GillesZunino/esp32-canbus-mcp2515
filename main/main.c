@@ -60,9 +60,11 @@ void app_main(void) {
             .queue_size = 8
         }
     };
+    ESP_LOGI(TAG, "Initialize MCP2515 driver");
     ESP_ERROR_CHECK(canbus_mcp2515_init(&mcp2515InitConfig, &can_mcp2515_handle));
 
     // Reset MCP2515 after power on - This automatically sets the MCP2515 in configuration mode
+    ESP_LOGI(TAG, "Reset MCP2515 after power on");
     ESP_ERROR_CHECK(canbus_mcp2515_reset(can_mcp2515_handle));
 
     // Configure MCP2515 CAN bit timings - See CAN bit timing calculator in README
@@ -75,11 +77,21 @@ void app_main(void) {
         .phase_seg1 = 1,
         .phase_seg2 = 1
     };
+    ESP_LOGI(TAG, "Configure MCP2515 bit rate");
     ESP_ERROR_CHECK(canbus_mcp2515_set_bitrate(can_mcp2515_handle, &bitTimingConfig));
 
+    // Configure MCP2515 in loopback mode
+    const TickType_t ModeChangeDelay = pdMS_TO_TICKS(20);
+    const mcp2515_mode_t DesiredMCP1515Mode = MCP2515_MODE_LOOPBACK;
+    ESP_LOGI(TAG, "Setting MCP2515 in mode %d", DesiredMCP1515Mode);
+    ESP_ERROR_CHECK(canbus_mcp2515_set_mode(can_mcp2515_handle, DesiredMCP1515Mode, ModeChangeDelay));
+
+    // Read mode and log
+    mcp2515_mode_t mcp2515Mode;
+    ESP_ERROR_CHECK(canbus_mcp2515_get_mode(can_mcp2515_handle, &mcp2515Mode));
+    ESP_LOGI(TAG, "MCP2515 is in mode %d", mcp2515Mode);
 
     const TickType_t DelayBetweenFrames = pdMS_TO_TICKS(100);
-
     do {
          vTaskDelay(DelayBetweenFrames);
     } while (true);

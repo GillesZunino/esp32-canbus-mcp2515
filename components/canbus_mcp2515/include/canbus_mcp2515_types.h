@@ -25,6 +25,24 @@ typedef enum {
 } mcp2515_mode_t;
 
 /**
+ * @brief MCP2515 Receive filters.
+ */
+typedef enum {
+    RXF0 = 0,
+    RXF1 = 1,
+    RXF2 = 2,
+    RXF3 = 3,
+    RXF4 = 4,
+    RXF5 = 5
+} mcp2515_RXFn_t;
+/**
+ * @brief MCP2515 filter / mask mode.
+ */
+typedef enum {
+    MCP2515_FILTER_STANDARD_FRAME = 1,
+    MCP2515_FILTER_EXTENDED_FRAME = 2
+} mcp2515_filter_mode_t;
+/**
  * @brief MCP2515 instructions.
  */
 typedef enum {

@@ -43,6 +43,22 @@ typedef struct mcp2515_config {
 } mcp2515_config_t;
 
 /**
+ * @brief MCP1515 BTL mode.
+ */
+typedef enum canbus_mcp2515_btl_mode {
+    MCP2515_BTL_MODE_EXPLICIT = 1,                  ///< Phase Segment 2 length explicitely configured
+    MCP2515_BTL_MODE_GREATER_THAN_PS1_AND_IPT = 0   ///< Phase Segment 2 length = max(Phase Segment 1, IPT)
+} canbus_mcp2515_blt_mode_t;
+
+/**
+ * @brief MCP2515 sampling mode.
+ */
+typedef enum canbus_mcp2515_sampling_mode {
+    MCP2515_SAMPLING_MODE_ONCE = 0,     ///< Signal is sampled once
+    MCP2515_SAMPLING_MODE_THREE = 1     ///< Signal is sampled three times
+} canbus_mcp2515_sampling_mode_t;
+
+/**
  * @brief MCP2515 Bit timing configuration.
  */
 typedef struct mcp2515_bit_timing_config {

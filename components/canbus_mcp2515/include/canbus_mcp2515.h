@@ -72,6 +72,17 @@ typedef struct mcp2515_bit_timing_config {
 } mcp2515_bit_timing_config_t;
 
 
+/**
+ * @brief MCP2515 receive filter.
+ */
+typedef struct mcp2515_receive_filter {
+    mcp2515_RXFn_t receive_register;
+    mcp2515_filter_mode_t mode;
+    uint32_t mask;
+    uint32_t filter;
+} mcp2515_receive_filter_t;
+
+
 
 /**
  * @brief Installs the MCP2515 driver and get its handle.
@@ -130,6 +141,16 @@ esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_
  * @param bitTimingConfig   Bit timing configuration
  */
 esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp2515_bit_timing_config_t* bitTimingConfig);
+
+/**
+ * @brief Set MCP2515 receive filter(s).
+ * @note Filters apply to both standard and extended frames as follows:
+ *        * Standard: mask and filter (16 bits) apply to the Data bytes 01 and 1
+ *        * Extended: mask and filter (29 bits) apply to the entire Extended ID field
+ * @param handle   Handle of the MCP2515 device
+ * @param filter   Filter
+ */
+esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter);
 
 
 

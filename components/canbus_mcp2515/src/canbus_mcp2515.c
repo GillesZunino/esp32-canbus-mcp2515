@@ -210,6 +210,46 @@ esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp25
     return err;
 }
 
+esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter) {
+    if (filter == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // MCP2515 needs to be in configuration mode to set filtering
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
+
+    // Detect which filter mask register to use
+    mcp2515_RXMn_t filterRegister;
+    switch (filter->receive_register) {
+        case RXF0:
+        case RXF1:
+            filterRegister = RXM0;
+            break;
+
+        case RXF2:
+        case RXF3:
+        case RXF4:
+        case RXF5:
+            filterRegister = RXM1;
+            break;
+
+        default:
+            return ESP_ERR_INVALID_ARG;
+    }
+    
+    // Use the correct register based on the mode
+    switch (filter->mode) {
+        case MCP2515_FILTER_STANDARD_FRAME:
+
+            break;
+        case MCP2515_FILTER_EXTENDED_FRAME:
+            break;
+            
+        default:
+            return ESP_ERR_INVALID_ARG;
+    }
+    return ESP_OK;
+}
 esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data) {
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_ARG;

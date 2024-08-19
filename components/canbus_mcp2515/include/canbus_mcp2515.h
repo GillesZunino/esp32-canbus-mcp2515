@@ -73,13 +73,45 @@ typedef struct mcp2515_bit_timing_config {
 
 
 /**
+ * @brief MCP2515 Receive filters.
+ */
+typedef enum {
+    RXF0 = 0,
+    RXF1 = 1,
+    RXF2 = 2,
+    RXF3 = 3,
+    RXF4 = 4,
+    RXF5 = 5
+} mcp2515_RXFn_t;
+
+/**
+ * @brief MCP2515 filter / mask mode.
+ */
+typedef enum {
+    MCP2515_FILTER_STANDARD_FRAME = 1,
+    MCP2515_FILTER_EXTENDED_FRAME = 2
+} mcp2515_filter_mode_t;
+
+
+/**
  * @brief MCP2515 receive filter.
  */
 typedef struct mcp2515_receive_filter {
-    mcp2515_RXFn_t receive_register;
-    mcp2515_filter_mode_t mode;
-    uint32_t mask;
-    uint32_t filter;
+    mcp2515_RXFn_t rxfn;                ///< Receive filter to configure (RFX0 ... RFX5)
+    mcp2515_filter_mode_t mode;         ///< Filter applies to standard frames only or extended frames only             
+    union {                             ///< Filter
+        struct {
+            uint16_t id_filter;         ///< Standard ID filter. Only the least significant 11 bits are used
+            uint16_t id_mask;           ///< Standard ID mask. Only the lesat significant 11 bits are used
+            uint16_t data_filter;       ///< Data filter. The MSB applies to frame data[0] and LSB applied to frame data[1]
+            uint16_t data_mask;         ///< Data mask.
+        } standard_frame;
+
+        struct {
+            uint32_t eid_filter;        ///< Exrtended ID filter. Only the least significant 29 bits are used
+            uint32_t eid_mask;          ///< Extended ID mask. Only the least significant 29 bits are used
+        } extended_frame;
+    } filter __attribute__((__packed__));
 } mcp2515_receive_filter_t;
 
 

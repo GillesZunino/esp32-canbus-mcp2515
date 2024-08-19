@@ -211,6 +211,11 @@ esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp25
 }
 
 esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter) {
+    // Handle must have been initialized, which means we have configured the SPI device
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
     if (filter == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -218,38 +223,97 @@ esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, cons
     // MCP2515 needs to be in configuration mode to set filtering
     ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
 
-    // Detect which filter mask register to use
-    mcp2515_RXMn_t filterRegister;
-    switch (filter->receive_register) {
+    // Select the mask register associated with the requested filter
+    mcp2515_register_t maskRegister = (filter->rxfn == RXF0) || (filter->rxfn == RXF1) ? MCP2515_RXM0SIDH : MCP2515_RXM1SIDH;
+
+    // Select the register to load for the requested filter
+    mcp2515_register_t filterRegister;
+    switch (filter->rxfn) {
         case RXF0:
+            filterRegister = MCP2515_RXF0SIDH;
+            break;
+
         case RXF1:
-            filterRegister = RXM0;
+            filterRegister = MCP2515_RXF1SIDH;
             break;
 
         case RXF2:
+            filterRegister = MCP2515_RXF2SIDH;
+            break;
+
         case RXF3:
+            filterRegister = MCP2515_RXF3SIDH;
+            break;
+
         case RXF4:
+            filterRegister = MCP2515_RXF4SIDH;
+            break;
+
         case RXF5:
-            filterRegister = RXM1;
+            filterRegister = MCP2515_RXF5SIDH;
             break;
 
         default:
             return ESP_ERR_INVALID_ARG;
     }
-    
-    // Use the correct register based on the mode
+
+    uint8_t count = 4;
+    uint8_t filterSpiBuffer[count];
+    uint8_t maskSpiBuffer[count];
+
     switch (filter->mode) {
         case MCP2515_FILTER_STANDARD_FRAME:
+            filterSpiBuffer[0] = (uint8_t) ((filter->filter.standard_frame.id_filter >> 3) & 0x00FF);           // RXFnSIDH
+            filterSpiBuffer[1] = (uint8_t)((filter->filter.standard_frame.id_filter & 0x0007) << 3);            // RXFnSIDL
+            filterSpiBuffer[2] = (uint8_t) ((filter->filter.standard_frame.data_filter & 0xFF00) >> 8);         // RXFnSEID8
+            filterSpiBuffer[3] = (uint8_t) (filter->filter.standard_frame.data_filter & 0x00FF);                // RXFnSEID0
 
+            maskSpiBuffer[0] = (uint8_t) ((filter->filter.standard_frame.id_mask >> 3) & 0x00FF);               // RXMnSIDH
+            maskSpiBuffer[1] = (uint8_t) ((filter->filter.standard_frame.id_mask & 0x0007) << 3);               // RXMnSIDL
+            maskSpiBuffer[2] = (uint8_t) ((filter->filter.standard_frame.data_mask & 0xFF00) >> 8);             // RXMnEID8
+            maskSpiBuffer[3] = (uint8_t) (filter->filter.standard_frame.data_mask & 0x00FF);                    // RXMnEID0
             break;
+        
         case MCP2515_FILTER_EXTENDED_FRAME:
+            filterSpiBuffer[0] = (uint8_t) ((filter->filter.extended_frame.eid_filter & 0x1FFC0000UL) >> 18);   // RXFnSIDH
+            filterSpiBuffer[1] = (uint8_t) (((filter->filter.extended_frame.eid_mask & 0xE00000UL) >> 11) | 8 | 
+                                            ((filter->filter.extended_frame.eid_mask & 0x030000UL) >> 16));     // RXFnSIDL
+            filterSpiBuffer[2] = (uint8_t) ((filter->filter.extended_frame.eid_filter & 0x00FFUL) >> 8);        // RXFnSEID8
+            filterSpiBuffer[3] = (uint8_t) (filter->filter.extended_frame.eid_filter & 0x00FFUL);               // RXFnSEID0
+
+            maskSpiBuffer[0] = (uint8_t) ((filter->filter.extended_frame.eid_mask & 0x1FFC0000UL) >> 18);       // RXMnSIDH
+            maskSpiBuffer[1] = (uint8_t) (((filter->filter.extended_frame.eid_mask & 0xE00000UL) >> 11) |  
+                                          ((filter->filter.extended_frame.eid_mask & 0x030000UL) >> 16));       // RXMnSIDL
+            maskSpiBuffer[2] = (uint8_t) ((filter->filter.extended_frame.eid_mask & 0x00FFUL) >> 8);            // RXMnEID8
+            maskSpiBuffer[3] = (uint8_t) (filter->filter.extended_frame.eid_mask & 0x00FFUL);                   // RXMnEID0
             break;
             
         default:
             return ESP_ERR_INVALID_ARG;
     }
-    return ESP_OK;
+
+    // TODO: Externalize
+    TickType_t SpiBusAcquisitionDelay = pdMS_TO_TICKS(10); // portMAX_DELAY
+
+// TODO: Log filter prefix and maskprefix correctly
+    ESP_LOGI(CanBusMCP2515LogTag, "Configuring MCP2515 filter RXFnSIDH: 0x%02X, RXFnSIDL: 0x%02X, RXFnSEID8: 0x%02X, RXFnSEID0: 0x%02X | RXMnSIDH: 0x%02X, RXMnSIDL: 0x%02X, RXMnEID8: 0x%02X, RXMnEID0: 0x%02X", filterSpiBuffer[0], filterSpiBuffer[1], filterSpiBuffer[2], filterSpiBuffer[3], maskSpiBuffer[0], maskSpiBuffer[1], maskSpiBuffer[2], maskSpiBuffer[3]);
+
+    // Take exclusive access of the SPI bus during configuration
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, SpiBusAcquisitionDelay), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
+    
+        // Apply filter configuration - First filter itself in RXFnSIDH, RXFnSIDL, RXFnEID8, RXFnEID0
+        esp_err_t err = mcp2515_write_registers(handle, filterRegister, filterSpiBuffer, count);
+        if (err == ESP_OK) {
+            // Then filter mask in RXMnSIDH, RXMnSIDL, RXMnEID8, RXMnEID0
+            err = mcp2515_write_registers(handle, maskRegister, maskSpiBuffer, count);
+        }
+        
+    // Release access to the SPI bus
+    spi_device_release_bus(handle->spi_device_handle);
+
+    return err;
 }
+
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
     return mcp2515_read_register(handle, MCP2515_TEC, count);
 }

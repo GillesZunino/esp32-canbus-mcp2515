@@ -80,19 +80,105 @@ void app_main(void) {
     ESP_LOGI(TAG, "Configure MCP2515 bit rate");
     ESP_ERROR_CHECK(canbus_mcp2515_set_bitrate(can_mcp2515_handle, &bitTimingConfig));
 
-    // Configure MCP2515 in loopback mode
-    const TickType_t ModeChangeDelay = pdMS_TO_TICKS(20);
-    const mcp2515_mode_t DesiredMCP1515Mode = MCP2515_MODE_LOOPBACK;
-    ESP_LOGI(TAG, "Set MCP2515 in mode %d", DesiredMCP1515Mode);
-    ESP_ERROR_CHECK(canbus_mcp2515_set_mode(can_mcp2515_handle, DesiredMCP1515Mode, ModeChangeDelay));
+    // Set a receive filter RXF0 - Applies to Standard frames
+    mcp2515_receive_filter_t rxf0StandardFrameFilter = {
+        .rxfn = RXF0,
+        .mode = MCP2515_FILTER_STANDARD_FRAME,
+        .filter.standard_frame = {
+            .id_filter = 0x123,     // Accept only frames with this ID ...
+            .id_mask = 0x7FF,       // Filter on all 11 bits of Standard ID
+            .data_filter = 0x0102,  // ... and this data (frame byte 0 = 0x01 and frame byte 1 = 0x02)
+            .data_mask = 0xFFFF     // Filter on all 16 bits of data
+        }
+    };
+    ESP_LOGI(TAG, "Configure MCP2515 Standard frame filter RXF0");
+    ESP_ERROR_CHECK(canbus_mcp2515_set_receive_filter(can_mcp2515_handle, &rxf0StandardFrameFilter));
 
-    // Read mode and log
-    mcp2515_mode_t mcp2515Mode;
-    ESP_ERROR_CHECK(canbus_mcp2515_get_mode(can_mcp2515_handle, &mcp2515Mode));
-    ESP_LOGI(TAG, "MCP2515 is in mode %d", mcp2515Mode);
+    // Set a receive filter RXF2 - Applies to Extended frames
+    mcp2515_receive_filter_t rxf2ExtendedFrameFilter = {
+        .rxfn = RXF2,
+        .mode = MCP2515_FILTER_EXTENDED_FRAME,
+        .filter.extended_frame = {
+            .eid_filter = 0x1234567,     // Accept only frames with this ID ...
+            .eid_mask = CAN_EFF_MASK     // Filter on all 29 bits of Extended ID
+        }
+    };
+    ESP_LOGI(TAG, "Configure MCP2515 Extended frame filter RXF2");
+    ESP_ERROR_CHECK(canbus_mcp2515_set_receive_filter(can_mcp2515_handle, &rxf2ExtendedFrameFilter));
 
+
+    // ESP_ERROR_CHECK(canbus_mcp2515_set_isr_handler());
+
+    // Standard CAN frame which will pass filtering
+    can_frame_t filterdInStandardFrame = {
+        .can_id = 0x123,
+        .can_dlc = 8,
+        .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
+    };
+
+    // CAN frame which will be filtered out
+    can_frame_t filterdOutStandardFrame = {
+        // TODO: Make this work
+        .can_id = 0x456,
+        .can_dlc = 8,
+        .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
+    };
+
+    // Extended CAN frame which will pass filtering
+    can_frame_t filterdInExtendedFrame = {
+        // TODO: Make this work
+        .can_id = 0x1234567,
+        .can_dlc = 8,
+        .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
+    };
+
+    // Extended CAN frame which will be filtered out
+    can_frame_t filterdOutExtendedFrame = {
+        // TODO: Make this work
+        .can_id = 0x7654321,
+        .can_dlc = 8,
+        .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
+    };
+
+    // Set the MCP2515 in loopback mode for testing with one node only
+    ESP_ERROR_CHECK(canbus_mcp2515_set_mode(can_mcp2515_handle, MCP2515_MODE_LOOPBACK, 50));
+
+    // Send a few frames to see the effect of receive filtering
+    const uint16_t NumberOfFramesToSend = 20;
     const TickType_t DelayBetweenFrames = pdMS_TO_TICKS(1000);
+
+    uint8_t framesSent = 0;
     do {
+        // Send a frame if necessary
+        if (framesSent <= NumberOfFramesToSend) {
+            can_frame_t* pCanFrame = NULL;
+
+            framesSent++;
+
+            // Alternate between standard and extended frames (filtered in or out)
+            if (framesSent % 9 == 0) {
+                pCanFrame = &filterdInExtendedFrame;
+            } else {
+                if (framesSent % 3 == 0) {
+                    pCanFrame = &filterdOutExtendedFrame;
+                } else {
+                    if (framesSent % 4 == 0) {
+                        pCanFrame = &filterdInStandardFrame;
+                    } else {
+                        if (framesSent % 2 == 0) {
+                            pCanFrame = &filterdOutStandardFrame;
+                        }
+                    }
+                }
+            }
+
+            pCanFrame->data[0] = framesSent;
+            // esp_err_t err = canbus_mcp2515_send(can_mcp2515_handle, pCanFrame);
+            // if (err != ESP_OK) {
+            //     ESP_LOGE(TAG, "Error sending frame with index %d: %d", framesSent, err);
+            // }
+        }
+
         // Retrieve transmit/ receive error count
         uint8_t transmitErrorCount = 0;
         uint8_t receiveErrorCount = 0;

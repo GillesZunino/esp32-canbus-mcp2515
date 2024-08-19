@@ -250,6 +250,14 @@ esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, cons
     }
     return ESP_OK;
 }
+esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
+    return mcp2515_read_register(handle, MCP2515_TEC, count);
+}
+
+esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
+    return mcp2515_read_register(handle, MCP2515_REC, count);
+}
+
 esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data) {
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_ARG;
@@ -374,6 +382,7 @@ esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_
 
     return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
 }
+
 static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config) {
     if (config == NULL) {
         return ESP_ERR_INVALID_ARG;

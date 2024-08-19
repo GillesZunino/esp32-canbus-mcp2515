@@ -91,9 +91,16 @@ void app_main(void) {
     ESP_ERROR_CHECK(canbus_mcp2515_get_mode(can_mcp2515_handle, &mcp2515Mode));
     ESP_LOGI(TAG, "MCP2515 is in mode %d", mcp2515Mode);
 
-    const TickType_t DelayBetweenFrames = pdMS_TO_TICKS(100);
+    const TickType_t DelayBetweenFrames = pdMS_TO_TICKS(1000);
     do {
-         vTaskDelay(DelayBetweenFrames);
+        // Retrieve transmit/ receive error count
+        uint8_t transmitErrorCount = 0;
+        uint8_t receiveErrorCount = 0;
+        ESP_ERROR_CHECK(canbus_mcp2515_get_transmit_error_count(can_mcp2515_handle, &transmitErrorCount));
+        ESP_ERROR_CHECK(canbus_mcp2515_get_receive_error_count(can_mcp2515_handle, &receiveErrorCount));
+        ESP_LOGI(TAG, "MCP2515 Receive Error Count %d - Transmit Error Count %d", receiveErrorCount, transmitErrorCount);
+
+        vTaskDelay(DelayBetweenFrames);
     } while (true);
 
     // Shutdown MCP2515 driver and SPI bus

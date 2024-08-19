@@ -199,13 +199,24 @@ esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp25
 
     ESP_LOGI(CanBusMCP2515LogTag, "Configuring MCP2515 bit timing with CNF1: 0x%02X, CNF2: 0x%02X, CNF3[5:0]: 0x%02X", cnf1, cnf2, cnf3);
     
-    // Apply bit timing configuration to chip - First CNF3 modify
-    esp_err_t err = mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, 0x07);
-    if (err == ESP_OK) {
-        // Then CNF2 and CNF1 with register address auto increment
-        uint8_t cnf2_cnf1[] = { cnf2, cnf1 };
-        err = mcp2515_write_registers(handle, MCP2515_CNF2, cnf2_cnf1, sizeof(cnf2_cnf1) / sizeof(cnf2_cnf1[0]));
-    }
+
+        // TODO: Externalize
+    TickType_t SpiBusAcquisitionDelay = pdMS_TO_TICKS(10); // portMAX_DELAY
+
+
+    // Take exclusive access of the SPI bus during configuration
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, SpiBusAcquisitionDelay), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
+    
+        // Apply bit timing configuration - First CNF3 modify
+        esp_err_t err = mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, 0x07);
+        if (err == ESP_OK) {
+            // Then CNF2 and CNF1 with register address auto increment
+            uint8_t cnf2_cnf1[] = { cnf2, cnf1 };
+            err = mcp2515_write_registers(handle, MCP2515_CNF2, cnf2_cnf1, sizeof(cnf2_cnf1) / sizeof(cnf2_cnf1[0]));
+        }
+
+    // Release access to the SPI bus
+    spi_device_release_bus(handle->spi_device_handle);
 
     return err;
 }

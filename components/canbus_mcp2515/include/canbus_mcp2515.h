@@ -117,6 +117,22 @@ typedef struct mcp2515_receive_filter {
 
 
 /**
+ * @brief MCP2515 modes of operation.
+ * @note On power on, the MCP2515 automatically enters configuration mode.
+ */
+typedef enum {
+    MCP2515_MODE_NORMAL     = 0x00,
+    MCP2515_MODE_SLEEP      = 0x01,
+    MCP2515_MODE_LOOPBACK   = 0x02,
+    MCP2515_MODE_LISTENONLY = 0x03,
+    MCP2515_MODE_CONFIG     = 0x04
+} mcp2515_mode_t;
+
+
+
+
+
+/**
  * @brief Installs the MCP2515 driver and get its handle.
  *
  * @param      config   Configuration for the ESSL SPI device

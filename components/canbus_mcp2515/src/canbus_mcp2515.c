@@ -199,13 +199,8 @@ esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp25
 
     ESP_LOGI(CanBusMCP2515LogTag, "Configuring MCP2515 bit timing with CNF1: 0x%02X, CNF2: 0x%02X, CNF3[5:0]: 0x%02X", cnf1, cnf2, cnf3);
     
-
-        // TODO: Externalize
-    TickType_t SpiBusAcquisitionDelay = pdMS_TO_TICKS(10); // portMAX_DELAY
-
-
     // Take exclusive access of the SPI bus during configuration
-    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, SpiBusAcquisitionDelay), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
     
         // Apply bit timing configuration - First CNF3 modify
         esp_err_t err = mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, 0x07);
@@ -303,14 +298,11 @@ esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, cons
             return ESP_ERR_INVALID_ARG;
     }
 
-    // TODO: Externalize
-    TickType_t SpiBusAcquisitionDelay = pdMS_TO_TICKS(10); // portMAX_DELAY
-
-// TODO: Log filter prefix and maskprefix correctly
+    // TODO: Log filter prefix and maskprefix correctly
     ESP_LOGI(CanBusMCP2515LogTag, "Configuring MCP2515 filter RXFnSIDH: 0x%02X, RXFnSIDL: 0x%02X, RXFnSEID8: 0x%02X, RXFnSEID0: 0x%02X | RXMnSIDH: 0x%02X, RXMnSIDL: 0x%02X, RXMnEID8: 0x%02X, RXMnEID0: 0x%02X", filterSpiBuffer[0], filterSpiBuffer[1], filterSpiBuffer[2], filterSpiBuffer[3], maskSpiBuffer[0], maskSpiBuffer[1], maskSpiBuffer[2], maskSpiBuffer[3]);
 
     // Take exclusive access of the SPI bus during configuration
-    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, SpiBusAcquisitionDelay), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
     
         // Apply filter configuration - First filter itself in RXFnSIDH, RXFnSIDL, RXFnEID8, RXFnEID0
         esp_err_t err = mcp2515_write_registers(handle, filterRegister, filterSpiBuffer, count);

@@ -165,9 +165,7 @@ void app_main(void) {
                     if (framesSent % 4 == 0) {
                         pCanFrame = &filterdInStandardFrame;
                     } else {
-                        if (framesSent % 2 == 0) {
-                            pCanFrame = &filterdOutStandardFrame;
-                        }
+                        pCanFrame = &filterdOutStandardFrame;
                     }
                 }
             }

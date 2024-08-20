@@ -317,6 +317,17 @@ esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, cons
     return err;
 }
 
+esp_err_t canbus_mcp2515_set_clkout(canbus_mcp2515_handle_t handle, const mcp2515_clkout_config_t* config) {
+    // Options neeed to be specified
+    if (config == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // Configure CLKOUT pin via CLKEN (CANCTRL[2]) and CLKPRE (CANCTRL[1:0])
+    uint8_t canctrl = (config->enable ? 0x04 : 0x00) | (config->prescaler & 0x03);
+    return mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x07);
+}
+
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
     return mcp2515_read_register(handle, MCP2515_TEC, count);
 }

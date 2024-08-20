@@ -73,6 +73,24 @@ typedef struct mcp2515_bit_timing_config {
 
 
 /**
+ * @brief MCP2515 CLKOUT prescaler configuration.
+ */
+typedef enum {
+    MCP2515_CLKOUT_DIVIDER_1 = 0,    ///< CLKOUT = fosc
+    MCP2515_CLKOUT_DIVIDER_2 = 1,    ///< CLKOUT = fosc / 2
+    MCP2515_CLKOUT_DIVIDER_4 = 2,    ///< CLKOUT = fosc / 4
+    MCP2515_CLKOUT_DIVIDER_8 = 3,    ///< CLKOUT = fosc / 8
+} mcp2515_clkout_prescaler_t;
+
+/**
+ * @brief MCP2515 CLKOUT pin configuration.
+ */
+typedef struct mcp2515_clkout_config {
+    bool enable;                             ///< Enable CLKOUT pin
+    mcp2515_clkout_prescaler_t prescaler;    ///< CLKOUT prescaler
+} mcp2515_clkout_config_t;
+
+/**
  * @brief MCP2515 Receive filters.
  */
 typedef enum {

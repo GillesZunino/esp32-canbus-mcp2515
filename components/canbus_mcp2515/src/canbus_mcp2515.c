@@ -351,6 +351,12 @@ esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mc
     return err; 
 }
 
+esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable) {
+    // Configure OSM via CANCTRL (CANCTRL[3])
+    uint8_t canctrl = enable ? 0x04 : 0x00;
+    return mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x03);
+}
+
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
     return mcp2515_read_register(handle, MCP2515_TEC, count);
 }

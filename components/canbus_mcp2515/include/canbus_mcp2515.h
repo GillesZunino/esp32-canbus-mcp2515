@@ -237,6 +237,9 @@ esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle,
 
 
 esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
+
+esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable);
+
 /**
  * @brief Read an MCP2515 register.
  * @param handle          Handle of the MCP2515 device

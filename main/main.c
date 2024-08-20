@@ -68,12 +68,12 @@ void app_main(void) {
     ESP_ERROR_CHECK(canbus_mcp2515_reset(can_mcp2515_handle));
 
     // Configure the MCP2515 CLKOUT pin
-    mcp2515_clkout_config_t clkoutConfig = {
-        .enable = true,
+    mcp2515_clkout_sof_config_t clkoutSofConfig = {
+        .mode = MCP2515_CLKOUT_PIN_CLKOUT,
         .prescaler = MCP2515_CLKOUT_DIVIDER_4
     };
-    ESP_LOGI(TAG, "Configure MCP2515 CLKOUT pin");
-    ESP_ERROR_CHECK(canbus_mcp2515_set_clkout(can_mcp2515_handle, &clkoutConfig));
+    ESP_LOGI(TAG, "Configure MCP2515 CLKOUT/SOF pin");
+    ESP_ERROR_CHECK(canbus_mcp2515_set_clkout_sof(can_mcp2515_handle, &clkoutSofConfig));
 
     // Configure MCP2515 CAN bit timings - See CAN bit timing calculator in README
     mcp2515_bit_timing_config_t bitTimingConfig = {

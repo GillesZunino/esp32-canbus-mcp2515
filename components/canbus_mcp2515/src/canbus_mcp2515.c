@@ -317,15 +317,38 @@ esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, cons
     return err;
 }
 
-esp_err_t canbus_mcp2515_set_clkout(canbus_mcp2515_handle_t handle, const mcp2515_clkout_config_t* config) {
+esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config) {
     // Options neeed to be specified
     if (config == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
 
+    // CLKOUT/SOF requires the pin ot be enabled if it is to beused for any signal
+    bool enable_clkoutPin = (config->mode == MCP2515_CLKOUT_PIN_SOF) || (config->mode == MCP2515_CLKOUT_PIN_CLKOUT);
+
     // Configure CLKOUT pin via CLKEN (CANCTRL[2]) and CLKPRE (CANCTRL[1:0])
-    uint8_t canctrl = (config->enable ? 0x04 : 0x00) | (config->prescaler & 0x03);
-    return mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x07);
+    uint8_t canctrl = (enable_clkoutPin ? 0x04 : 0x00) | (config->mode == MCP2515_CLKOUT_PIN_CLKOUT ? config->prescaler & 0x03 : 0);
+
+    // CNF3[7] is CLKOUT/SOF pin enable bit
+    uint8_t cnf3 = config->mode == MCP2515_CLKOUT_PIN_SOF ? 0x80 : 0x00;
+
+    // MCP2515 needs to be in configuration mode to change CNF3
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
+
+    // Take exclusive access of the SPI bus during configuration
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
+
+        // Apply CLKOUT / SOF configuration - First CANCTRL to enable / disable the CLKOUT/SOF pin
+        esp_err_t err = mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x07);
+        if (err == ESP_OK) {
+            // Then CNF3 to enable / disable the CLKOUT/SOF pin
+            err = mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, 0x80);
+        }
+
+    // Release access to the SPI bus
+    spi_device_release_bus(handle->spi_device_handle);
+
+    return err; 
 }
 
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {

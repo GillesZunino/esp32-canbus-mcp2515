@@ -73,6 +73,15 @@ typedef struct mcp2515_bit_timing_config {
 
 
 /**
+ * @brief MCP2515 CLKOUT / SOF mode.
+ */
+typedef enum {
+    MCP2515_CLKOUT_PIN_OFF = 0,     ///< CLKOUT/SOF pin disabled
+    MCP2515_CLKOUT_PIN_SOF = 1,     ///< CLKOUT/SOF pin as SOF signal
+    MCP2515_CLKOUT_PIN_CLKOUT = 2   ///< CLKOUT/SOF pin as CLKOUT signal
+} mcp2515_clkout_sof_mode_t;
+
+/**
  * @brief MCP2515 CLKOUT prescaler configuration.
  */
 typedef enum {
@@ -85,10 +94,11 @@ typedef enum {
 /**
  * @brief MCP2515 CLKOUT pin configuration.
  */
-typedef struct mcp2515_clkout_config {
-    bool enable;                             ///< Enable CLKOUT pin
-    mcp2515_clkout_prescaler_t prescaler;    ///< CLKOUT prescaler
-} mcp2515_clkout_config_t;
+typedef struct mcp2515_clkout_sof_config {
+    mcp2515_clkout_sof_mode_t mode;          ///< CLKOUT/SOF pin mode
+    mcp2515_clkout_prescaler_t prescaler;    ///< CLKOUT prescaler when CLKOUT/SOF pin is confgiured for CLKOUT
+} mcp2515_clkout_sof_config_t;
+
 
 /**
  * @brief MCP2515 Receive filters.
@@ -226,6 +236,7 @@ esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle,
 
 
 
+esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
 /**
  * @brief Read an MCP2515 register.
  * @param handle          Handle of the MCP2515 device

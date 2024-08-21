@@ -69,7 +69,7 @@ void app_main(void) {
 
     // Configure the MCP2515 CLKOUT pin
     mcp2515_clkout_sof_config_t clkoutSofConfig = {
-        .mode = MCP2515_CLKOUT_PIN_CLKOUT,
+        .mode = MCP2515_CLKOUT_PIN_OFF,
         .prescaler = MCP2515_CLKOUT_DIVIDER_4
     };
     ESP_LOGI(TAG, "Configure MCP2515 CLKOUT/SOF pin");

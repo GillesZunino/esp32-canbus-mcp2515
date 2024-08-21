@@ -7,6 +7,11 @@
 #include <stdint.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /**
  * @brief Special address description flags for the CAN_ID.
  */
@@ -51,3 +56,8 @@ typedef struct can_frame {
 } can_frame_t;
 
 #pragma pack(pop)
+
+
+#ifdef __cplusplus
+}
+#endif

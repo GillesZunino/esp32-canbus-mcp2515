@@ -151,6 +151,18 @@ typedef enum {
     MCP2515_MODE_CONFIG     = 0x04
 } mcp2515_mode_t;
 
+/**
+ * @brief MCP2515 error flags for EFLG interpretation.
+ */
+#define MCP2515_EFLAG_RX1OVR 0x80       ///< Receive buffer 1 overflow flag. Set when a valid message is received in RX1and an interupt is pending
+#define MCP2515_EFLAG_RX0OVR 0x40       ///< Receive buffer 0 overflow flag. Set when a valid message is received in RX0 and an interupt is pending
+#define MCP2515_EFLAG_TXBO 0x20         ///< Trasnmit Bus-Off flag. Set when TEC is greater or equal than 255
+#define MCP2515_EFLAG_TEXP 0x10         ///< Transmit Error-Passive flag. Set when TEC is greater or equal than 128
+#define MCP2515_EFLAG_REXP 0x08         ///< Receive Error-Passive flag. Set when REC is greater or equal than 128
+#define MCP2515_EFLAG_TXWARN 0x04       ///< Transmit error warning flag. Set when TEC is greater or equal than 96
+#define MCP2515_EFLAG_RXWARN 0x02       ///< Receive error warning flag. Set when REC is greater or equal than 96
+#define MCP2515_EFLAG_EWARN 0x01        ///< Error warning flag. Set when REC or TEC is greater or equal than 96
+ 
 
 /**
  * @brief Installs the MCP2515 driver and get its handle.
@@ -241,6 +253,7 @@ esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool e
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count);
 esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle, uint8_t* count);
 
+esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, uint8_t* flags);
 
 
 #ifdef __cplusplus

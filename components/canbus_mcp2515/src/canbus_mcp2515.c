@@ -366,6 +366,10 @@ esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle,
     return mcp2515_read_register(handle, MCP2515_REC, count);
 }
 
+esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, uint8_t* flags) {
+    return mcp2515_read_register(handle, MCP2515_EFLG, flags);
+}
+
 esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data) {
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_ARG;

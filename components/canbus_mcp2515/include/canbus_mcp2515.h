@@ -99,6 +99,24 @@ typedef struct mcp2515_clkout_sof_config {
 
 
 /**
+ * @brief MCP2515 TXnRTS pin mode.
+ */
+typedef enum {
+    MCP2515_TXnRTS_PIN_REQUEST_TO_SEND = 0,    ///< TXnRTS pins as Request-to-Send
+    MCP2515_TXnRTS_PIN_DIGITAL_INPUT = 1       ///< TXnRTS pins as digital input
+} mcp2515_txnrts_pin_mode_t;
+
+typedef struct mcp2515_txnrts_pins_config {
+    mcp2515_txnrts_pin_mode_t tx0rts_mode;
+    mcp2515_txnrts_pin_mode_t tx1rts_mode;
+    mcp2515_txnrts_pin_mode_t tx2rts_mode;
+} mcp2515_txnrts_pins_config_t;
+
+#define MCP2515_TXnRTS_PIN_TX0 1
+#define MCP2515_TXnRTS_PIN_TX1 2
+#define MCP2515_TXnRTS_PIN_TX2 4
+
+/**
  * @brief MCP2515 Receive filters.
  */
 typedef enum {
@@ -237,7 +255,28 @@ esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, cons
  * @param handle    Handle of the MCP2515 device
  * @param config    CLKOUT/SOF pin configuration
  */
+
+/**
+ * @brief Configure MCP2515 CLKOUT pin behavior.
+ * @param handle    Handle of the MCP2515 device
+ * @param config    CLKOUT/SOF pin configuration
+ */
 esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
+
+/**
+ * @brief Configure MCP2515 TXnRST pins behavior.
+ * @param handle    Handle of the MCP2515 device
+ * @param config   TXnRTS pins mode
+ */
+esp_err_t canbus_mcp2515_set_txnrts(canbus_mcp2515_handle_t handle, const mcp2515_txnrts_pins_config_t* config);
+
+/**
+ * @brief Read state of MCP2515 TXnRTS pins as digital inputs.
+ * @note For RXnRTS pins to act as difitial input, configure the MCP2515 by calling canbus_mcp2515_set_txnrts().
+ * @param handle    Handle of the MCP2515 device
+ * @param txrts     Pointer to a memory location which receives the state of the TXnRTS pins
+ */
+esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txrts);
 
 
 /**

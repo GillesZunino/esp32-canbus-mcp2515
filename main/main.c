@@ -75,6 +75,15 @@ void app_main(void) {
     ESP_LOGI(TAG, "Configure MCP2515 CLKOUT/SOF pin");
     ESP_ERROR_CHECK(canbus_mcp2515_set_clkout_sof(can_mcp2515_handle, &clkoutSofConfig));
 
+
+    mcp2515_txnrts_pins_config_t txnrtsConfig = {
+        .tx0rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT,
+        .tx1rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT,
+        .tx2rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT
+    };
+    ESP_LOGI(TAG, "Configure MCP2515 TXnRST pins to digital input");
+    ESP_ERROR_CHECK(canbus_mcp2515_set_txnrts(can_mcp2515_handle, &txnrtsConfig));
+
     // Configure MCP2515 CAN bit timings - See CAN bit timing calculator in README
     mcp2515_bit_timing_config_t bitTimingConfig = {
         .bit_rate_prescaler = 1,
@@ -193,6 +202,11 @@ void app_main(void) {
         ESP_ERROR_CHECK(canbus_mcp2515_get_receive_error_count(can_mcp2515_handle, &receiveErrorCount));
         ESP_ERROR_CHECK(canbus_mcp1515_get_error_flags(can_mcp2515_handle, &eflg));
         ESP_LOGI(TAG, "MCP2515 REC: %d - TEC: %d - EFLG: 0x%02X", receiveErrorCount, transmitErrorCount, eflg);
+
+        // Retrieve digital inputs state via TXnRTS pins
+        uint8_t txnrts = 0;
+        ESP_ERROR_CHECK(canbus_mcp2515_get_txnrts(can_mcp2515_handle, &txnrts));
+        ESP_LOGI(TAG, "Digital Inputs - TX0RTS: %s | TX1RTS: %s | TX2RTS: %s", (txnrts & MCP2515_TXnRTS_PIN_TX0) ? "HIGH" : "LOW", (txnrts & MCP2515_TXnRTS_PIN_TX1) ? "HIGH" : "LOW", (txnrts & MCP2515_TXnRTS_PIN_TX2) ? "HIGH" : "LOW");
 
         vTaskDelay(DelayBetweenFrames);
     } while (true);

@@ -223,6 +223,7 @@ esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, cons
         return ESP_ERR_INVALID_STATE;
     }
 
+    // Options neeed to be specified
     if (filter == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -350,6 +351,41 @@ esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mc
     spi_device_release_bus(handle->spi_device_handle);
 
     return err; 
+}
+
+esp_err_t canbus_mcp2515_set_txnrts(canbus_mcp2515_handle_t handle, const mcp2515_txnrts_pins_config_t* config) {
+    // Handle must have been initialized, which means we have configured the SPI device
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    // Options neeed to be specified
+    if (config == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // MCP2515 needs to be in configuration mode to change TXRTSCTRL
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
+
+    // Configure TXRTSCTRL via TXRTSCTRL[2:0]
+    uint8_t txrtsctrl = (config->tx0rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 1 : 0) | (config->tx1rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 2 : 0) | (config->tx2rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 4 : 0);
+    return mcp2515_modify_register(handle, MCP2515_TXRTSCTRL, txrtsctrl, 0x07);
+}
+
+esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txrts) {
+    if (txrts == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    
+    uint8_t stagedTxrts;
+    esp_err_t err = mcp2515_read_register(handle, MCP2515_TXRTSCTRL, &stagedTxrts);
+    if (err == ESP_OK) {
+        *txrts = (stagedTxrts & 0x70) >> 4;
+    } else {
+        *txrts = 0;
+    }
+
+    return err;
 }
 
 esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable) {

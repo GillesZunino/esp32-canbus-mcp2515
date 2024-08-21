@@ -10,7 +10,6 @@
 #include <driver/spi_master.h>
 
 #include "can.h"
-#include "canbus_mcp2515_types.h"
 
 
 #ifdef __cplusplus
@@ -71,7 +70,6 @@ typedef struct mcp2515_bit_timing_config {
     uint8_t phase_seg2;                         // 1..8
 } mcp2515_bit_timing_config_t;
 
-
 /**
  * @brief MCP2515 CLKOUT / SOF mode.
  */
@@ -120,7 +118,6 @@ typedef enum {
     MCP2515_FILTER_EXTENDED_FRAME = 2
 } mcp2515_filter_mode_t;
 
-
 /**
  * @brief MCP2515 receive filter.
  */
@@ -142,8 +139,6 @@ typedef struct mcp2515_receive_filter {
     } filter __attribute__((__packed__));
 } mcp2515_receive_filter_t;
 
-
-
 /**
  * @brief MCP2515 modes of operation.
  * @note On power on, the MCP2515 automatically enters configuration mode.
@@ -155,9 +150,6 @@ typedef enum {
     MCP2515_MODE_LISTENONLY = 0x03,
     MCP2515_MODE_CONFIG     = 0x04
 } mcp2515_mode_t;
-
-
-
 
 
 /**
@@ -228,17 +220,29 @@ esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp25
  */
 esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter);
 
+/**
+ * @brief Configure MCP2515 CLKOUT pin behavior.
+ * @param handle    Handle of the MCP2515 device
+ * @param config    CLKOUT/SOF pin configuration
+ */
+esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
+
+
+/**
+ * @brief COnfigure MCP2515 one-shot mode.
+ * @param handle    Handle of the MCP2515 device
+ * @param enable    true to enable One-Shot mode, false to disable.
+ */
+esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable);
+
+
+
 
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count);
 esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle, uint8_t* count);
 
 
 
-
-
-esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
-
-esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable);
 
 /**
  * @brief Read an MCP2515 register.

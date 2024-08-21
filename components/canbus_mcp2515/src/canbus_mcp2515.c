@@ -7,6 +7,7 @@
 #include <esp_check.h>
 
 #include "canbus_mcp2515.h"
+#include "canbus_mcp2515_types.h"
 
 static const char* CanBusMCP2515LogTag = "canbus-mcp2515";
 

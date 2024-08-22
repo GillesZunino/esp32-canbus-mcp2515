@@ -234,11 +234,18 @@ esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_
 esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_mode_t mode, const TickType_t modeChangeDelay);
 
 /**
+ * @brief COnfigure MCP2515 one-shot mode.
+ * @param handle    Handle of the MCP2515 device
+ * @param enable    true to enable One-Shot mode, false to disable.
+ */
+esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable);
+
+/**
  * @brief Set the bit timing configuration of the MCP2515 device.
  * @param handle            Handle of the MCP2515 device
  * @param bitTimingConfig   Bit timing configuration
  */
-esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp2515_bit_timing_config_t* bitTimingConfig);
+esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const mcp2515_bit_timing_config_t* bitTimingConfig);
 
 /**
  * @brief Set MCP2515 receive filter(s).
@@ -248,7 +255,7 @@ esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp25
  * @param handle   Handle of the MCP2515 device
  * @param filter   Filter
  */
-esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter);
+esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter);
 
 /**
  * @brief Configure MCP2515 CLKOUT pin behavior.
@@ -261,14 +268,14 @@ esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, cons
  * @param handle    Handle of the MCP2515 device
  * @param config    CLKOUT/SOF pin configuration
  */
-esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
+esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
 
 /**
  * @brief Configure MCP2515 TXnRST pins behavior.
  * @param handle    Handle of the MCP2515 device
  * @param config   TXnRTS pins mode
  */
-esp_err_t canbus_mcp2515_set_txnrts(canbus_mcp2515_handle_t handle, const mcp2515_txnrts_pins_config_t* config);
+esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const mcp2515_txnrts_pins_config_t* config);
 
 /**
  * @brief Read state of MCP2515 TXnRTS pins as digital inputs.
@@ -278,13 +285,6 @@ esp_err_t canbus_mcp2515_set_txnrts(canbus_mcp2515_handle_t handle, const mcp251
  */
 esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txrts);
 
-
-/**
- * @brief COnfigure MCP2515 one-shot mode.
- * @param handle    Handle of the MCP2515 device
- * @param enable    true to enable One-Shot mode, false to disable.
- */
-esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable);
 
 
 

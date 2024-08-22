@@ -160,7 +160,13 @@ esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_
     return err;
 }
 
-esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp2515_bit_timing_config_t* bitTimingConfig) {
+esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable) {
+    // Configure OSM via CANCTRL (CANCTRL[3])
+    uint8_t canctrl = enable ? 0x04 : 0x00;
+    return mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x03);
+}
+
+esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const mcp2515_bit_timing_config_t* bitTimingConfig) {
     if ((bitTimingConfig->bit_rate_prescaler < 1) || (bitTimingConfig->bit_rate_prescaler > 64)) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -217,7 +223,7 @@ esp_err_t canbus_mcp2515_set_bitrate(canbus_mcp2515_handle_t handle, const mcp25
     return err;
 }
 
-esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter) {
+esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter) {
     // Handle must have been initialized, which means we have configured the SPI device
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_STATE;
@@ -319,7 +325,7 @@ esp_err_t canbus_mcp2515_set_receive_filter(canbus_mcp2515_handle_t handle, cons
     return err;
 }
 
-esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config) {
+esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config) {
     // Options neeed to be specified
     if (config == NULL) {
         return ESP_ERR_INVALID_ARG;
@@ -353,7 +359,7 @@ esp_err_t canbus_mcp2515_set_clkout_sof(canbus_mcp2515_handle_t handle, const mc
     return err; 
 }
 
-esp_err_t canbus_mcp2515_set_txnrts(canbus_mcp2515_handle_t handle, const mcp2515_txnrts_pins_config_t* config) {
+esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const mcp2515_txnrts_pins_config_t* config) {
     // Handle must have been initialized, which means we have configured the SPI device
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_STATE;
@@ -388,11 +394,6 @@ esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txr
     return err;
 }
 
-esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable) {
-    // Configure OSM via CANCTRL (CANCTRL[3])
-    uint8_t canctrl = enable ? 0x04 : 0x00;
-    return mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x03);
-}
 
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
     return mcp2515_read_register(handle, MCP2515_TEC, count);

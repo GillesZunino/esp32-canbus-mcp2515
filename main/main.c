@@ -73,7 +73,7 @@ void app_main(void) {
         .prescaler = MCP2515_CLKOUT_DIVIDER_4
     };
     ESP_LOGI(TAG, "Configure MCP2515 CLKOUT/SOF pin");
-    ESP_ERROR_CHECK(canbus_mcp2515_set_clkout_sof(can_mcp2515_handle, &clkoutSofConfig));
+    ESP_ERROR_CHECK(canbus_mcp2515_configure_clkout_sof(can_mcp2515_handle, &clkoutSofConfig));
 
 
     // Configure MCP2515 TXnRST pin behavior
@@ -83,7 +83,7 @@ void app_main(void) {
         .tx2rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT
     };
     ESP_LOGI(TAG, "Configure MCP2515 TXnRST pins to digital input");
-    ESP_ERROR_CHECK(canbus_mcp2515_set_txnrts(can_mcp2515_handle, &txnrtsConfig));
+    ESP_ERROR_CHECK(canbus_mcp2515_configure_txnrts(can_mcp2515_handle, &txnrtsConfig));
 
     // Configure MCP2515 CAN bit timings - See CAN bit timing calculator in README
     mcp2515_bit_timing_config_t bitTimingConfig = {
@@ -96,7 +96,7 @@ void app_main(void) {
         .phase_seg2 = 1
     };
     ESP_LOGI(TAG, "Configure MCP2515 bit rate");
-    ESP_ERROR_CHECK(canbus_mcp2515_set_bitrate(can_mcp2515_handle, &bitTimingConfig));
+    ESP_ERROR_CHECK(canbus_mcp2515_configure_bitrate(can_mcp2515_handle, &bitTimingConfig));
 
     // Set a receive filter RXF0 - Applies to Standard frames
     mcp2515_receive_filter_t rxf0StandardFrameFilter = {
@@ -110,7 +110,7 @@ void app_main(void) {
         }
     };
     ESP_LOGI(TAG, "Configure MCP2515 Standard frame filter RXF0");
-    ESP_ERROR_CHECK(canbus_mcp2515_set_receive_filter(can_mcp2515_handle, &rxf0StandardFrameFilter));
+    ESP_ERROR_CHECK(canbus_mcp2515_configure_receive_filter(can_mcp2515_handle, &rxf0StandardFrameFilter));
 
     // Set a receive filter RXF2 - Applies to Extended frames
     mcp2515_receive_filter_t rxf2ExtendedFrameFilter = {
@@ -122,7 +122,7 @@ void app_main(void) {
         }
     };
     ESP_LOGI(TAG, "Configure MCP2515 Extended frame filter RXF2");
-    ESP_ERROR_CHECK(canbus_mcp2515_set_receive_filter(can_mcp2515_handle, &rxf2ExtendedFrameFilter));
+    ESP_ERROR_CHECK(canbus_mcp2515_configure_receive_filter(can_mcp2515_handle, &rxf2ExtendedFrameFilter));
 
 
     // ESP_ERROR_CHECK(canbus_mcp2515_set_isr_handler());

@@ -78,7 +78,7 @@ void app_main(void) {
         .phase_seg2 = 1
     };
     ESP_LOGI(TAG, "Configure MCP2515 bit rate");
-    ESP_ERROR_CHECK(canbus_mcp2515_set_bitrate(can_mcp2515_handle, &bitTimingConfig));
+    ESP_ERROR_CHECK(canbus_mcp2515_configure_bitrate(can_mcp2515_handle, &bitTimingConfig));
 
     // Set the MCP2515 in loopback mode for testing with one node only
     ESP_LOGI(TAG, "Set MCP2515 to MCP2515_MODE_NORMAL");

@@ -76,6 +76,7 @@ void app_main(void) {
     ESP_ERROR_CHECK(canbus_mcp2515_set_clkout_sof(can_mcp2515_handle, &clkoutSofConfig));
 
 
+    // Configure MCP2515 TXnRST pin behavior
     mcp2515_txnrts_pins_config_t txnrtsConfig = {
         .tx0rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT,
         .tx1rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT,

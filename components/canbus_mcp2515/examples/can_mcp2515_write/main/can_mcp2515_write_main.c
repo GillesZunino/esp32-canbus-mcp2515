@@ -86,8 +86,8 @@ void app_main(void) {
 
     // Transmit a few CAN frames
     can_frame_t frame = {
-        .can_id = 0x123,
-        .can_dlc = 8,
+        .id = 0x123,
+        .dlc = 8,
         .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
     };
 
@@ -100,7 +100,7 @@ void app_main(void) {
 
         // Send frame
         ESP_LOGI(TAG, "Send frame with index %d", frameCount);
-        esp_err_t err = canbus_mcp2515_send(can_mcp2515_handle, &frame);
+        esp_err_t err = canbus_mcp2515_transmit(can_mcp2515_handle, &frame);
         if (err != ESP_OK) {
             ESP_LOGE(TAG, "Failed to send frame with index %d - Error: %d", frameCount, err);
         }

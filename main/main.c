@@ -129,32 +129,35 @@ void app_main(void) {
 
     // Standard CAN frame which will pass filtering
     can_frame_t filterdInStandardFrame = {
-        .can_id = 0x123,
-        .can_dlc = 8,
+        // TODO: Make this work
+        .id = 0x123,
+        .dlc = 8,
         .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
     };
 
     // CAN frame which will be filtered out
     can_frame_t filterdOutStandardFrame = {
         // TODO: Make this work
-        .can_id = 0x456,
-        .can_dlc = 8,
+        .id = 0x456,
+        .dlc = 8,
         .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
     };
 
     // Extended CAN frame which will pass filtering
     can_frame_t filterdInExtendedFrame = {
         // TODO: Make this work
-        .can_id = 0x1234567,
-        .can_dlc = 8,
+        .options = CAN_FRAME_OPTION_EXTENDED,
+        .id = 0x1234567,
+        .dlc = 8,
         .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
     };
 
     // Extended CAN frame which will be filtered out
     can_frame_t filterdOutExtendedFrame = {
         // TODO: Make this work
-        .can_id = 0x7654321,
-        .can_dlc = 8,
+        .options = CAN_FRAME_OPTION_EXTENDED,
+        .id = 0x7654321,
+        .dlc = 8,
         .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
     };
 
@@ -189,10 +192,16 @@ void app_main(void) {
             }
 
             pCanFrame->data[0] = framesSent;
-            // esp_err_t err = canbus_mcp2515_send(can_mcp2515_handle, pCanFrame);
-            // if (err != ESP_OK) {
-            //     ESP_LOGE(TAG, "Error sending frame with index %d: %d", framesSent, err);
-            // }
+
+            canbus_mcp2515_transmit_options_t sendOptions = {
+                .txb = MCP2515_TXB_AUTO
+            };
+
+            ESP_LOGI(TAG, "Sending frame with index %d", framesSent);
+            esp_err_t err = canbus_mcp2515_transmit(can_mcp2515_handle, pCanFrame, &sendOptions);
+            if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Error sending frame with index %d: %d", framesSent, err);
+            }
         }
 
         // Retrieve transmit/ receive error count

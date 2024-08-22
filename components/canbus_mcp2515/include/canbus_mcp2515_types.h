@@ -224,6 +224,14 @@ esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_
  */
 esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, const uint8_t data[], const uint8_t count);
 
+/**
+ * @brief Send a one byte command to the MCP2515.
+ * @param handle       Handle of the MCP2515 device
+ * @param instruction  Instruction to send
+ */
+esp_err_t mcp2515_send_single_byte_instruction(canbus_mcp2515_handle_t handle, const mcp2515_instruction_t instruction);
+
+
 
 #ifdef __cplusplus
 }

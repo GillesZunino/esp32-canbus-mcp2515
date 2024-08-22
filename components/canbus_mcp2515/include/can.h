@@ -33,7 +33,7 @@ extern "C" {
  *       bit 30   : Remote transmission request flag (1 = rtr frame)
  *       bit 31   : Frame format flag (0 = standard 11 bit, 1 = extended 29 bit)
  */
-typedef uint32_t canid_t;
+
 
 #define CAN_SFF_ID_BITS     11 ///< Standard CAN ID occupies 11 bits
 #define CAN_EFF_ID_BITS     29 ///< Extended CAN ID occupies 29 bits
@@ -43,19 +43,20 @@ typedef uint32_t canid_t;
  */
 #define CAN_MAX_DLC 8  ///< Maximum number of data bytes in a CAN data frame
 #define CAN_MAX_DLEN 8 ///< CAN frame payload maximum length in byte
+typedef enum {
+    CAN_FRAME_OPTION_RTR = 1,                ///< Frame is a Remote Transmission Request
+    CAN_FRAME_OPTION_EXTENDED = 2            ///< Frame is an Extended Frame
+} can_frame_options_t;
 
 /**
- * @brief Classical CAN frame structure (aka CAN 2.0B).
+ * @brief CAN frame structure (CAN 2.0B).
  */
-#pragma pack(push, 1)
-
 typedef struct can_frame {
-    canid_t can_id;  ///< 32 bit CAN_ID + EFF/RTR/ERR flags
-    uint8_t can_dlc; ///< Frame payload length in byte (0 .. CAN_MAX_DLEN)
-    uint8_t data[CAN_MAX_DLEN] __attribute__((aligned(8))); ///< Payload data
-} can_frame_t;
-
-#pragma pack(pop)
+    can_frame_options_t options;                            ///< Extended Frame, RTR ... (Logical OR of can_frame_options_t flags)
+    uint32_t id;                                            ///< Standard (11 bits) or extended (29 bits) CAN ID
+    uint8_t dlc;                                            ///< Frame payload length in byte (0 .. CAN_MAX_DLEN)
+    uint8_t data[CAN_MAX_DLC] __attribute__((aligned(8)));  ///< Payload data
+}  __attribute__((packed)) can_frame_t;
 
 
 #ifdef __cplusplus

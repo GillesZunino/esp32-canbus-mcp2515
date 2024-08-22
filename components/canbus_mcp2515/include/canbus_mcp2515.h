@@ -170,6 +170,24 @@ typedef enum {
 } mcp2515_mode_t;
 
 /**
+ * @brief MCP2515 Transmit registers.
+ */
+typedef enum  {
+    MCP2515_TXB_AUTO = -1,  ///< Automatically select the first available register
+    MCP2515_TXB0 = 0,   ///< Use TXB0
+    MCP2515_TXB1 = 1,   ///< Use TXB1
+    MCP2515_TXB2 = 2    ///< Use TXB2
+} mcp2515_TXBn_t;
+
+
+/**
+ * @brief Trasnmit options for sending CAN frames.
+ */
+typedef struct canbus_mcp2515_transmit_options {
+    mcp2515_TXBn_t txb;    ///< Transmit register to use
+} canbus_mcp2515_transmit_options_t;
+
+/**
  * @brief MCP2515 error flags for EFLG interpretation.
  */
 #define MCP2515_EFLAG_RX1OVR 0x80       ///< Receive buffer 1 overflow flag. Set when a valid message is received in RX1and an interupt is pending
@@ -262,12 +280,6 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
  * @param handle    Handle of the MCP2515 device
  * @param config    CLKOUT/SOF pin configuration
  */
-
-/**
- * @brief Configure MCP2515 CLKOUT pin behavior.
- * @param handle    Handle of the MCP2515 device
- * @param config    CLKOUT/SOF pin configuration
- */
 esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
 
 /**
@@ -284,6 +296,14 @@ esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const 
  * @param txrts     Pointer to a memory location which receives the state of the TXnRTS pins
  */
 esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txrts);
+
+/**
+ * @brief Transmit an MCP2515 register.
+ * @param handle    Handle of the MCP2515 device
+ * @param frame     Frame to transmit
+ * @param options   Transmit options
+ */
+esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const canbus_mcp2515_transmit_options_t* options); 
 
 
 

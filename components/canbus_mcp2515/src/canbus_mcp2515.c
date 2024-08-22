@@ -105,15 +105,7 @@ esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle) {
     //   * MOSI | 0xC0 |
     //   * MISO | N/A  |
     //
-    const uint8_t transactionLengthInBytes = 1;
-    spi_transaction_t spiTransaction = {
-        .flags = SPI_TRANS_USE_TXDATA,
-        .length = transactionLengthInBytes * 8,
-        .rxlength = 0,
-        .tx_data = { MCP2515_INSTRUCTION_RESET }
-    };
-
-    return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
+    return mcp2515_send_single_byte_instruction(handle, MCP2515_INSTRUCTION_RESET);
 }
 
 esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* pMode) {
@@ -407,6 +399,161 @@ esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, uint8_t
     return mcp2515_read_register(handle, MCP2515_EFLG, flags);
 }
 
+
+
+
+inline static uint8_t internal_get_sid10_to_sid3(const uint32_t id) {
+    return ((id & CAN_SFF_MASK) >> 3) & 0xFF;
+}
+
+inline static uint8_t internal_get_sid2_to_sid0(const uint32_t id) {
+    return (id & CAN_SFF_MASK) & 0x07;
+}
+
+inline static uint32_t internal_get_eid17_to_eid16(const uint32_t id) {
+    return ((id & CAN_EFF_MASK) >> 16) & 0x03;
+}
+
+inline static uint32_t internal_get_eid15_to_eid8(const uint32_t id) {
+    return ((id & CAN_EFF_MASK) >> 8) & 0xFF;
+}
+
+inline static uint32_t internal_get_eid7_to_eid0(const uint32_t id) {
+    return (id & CAN_EFF_MASK) & 0xFF;
+}
+
+
+
+esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const canbus_mcp2515_transmit_options_t* options) {
+    // Validate the frame
+    ESP_RETURN_ON_ERROR(internal_check_can_frame(frame), CanBusMCP2515LogTag, "%s() Invalid CAN frame", __func__);
+
+    // TODO: Select the right register - We hard code for now
+    mcp2515_TXBn_t effectiveTXn = options->txb == MCP2515_TXB_AUTO ? MCP2515_TXB0 : options->txb;
+
+    // TODO: Do we even need to send RTS ? We might not if the pins were configured to fire the message
+    // Select the correct transmit register and RTS instruction to send
+    mcp2515_register_t controlRegister;
+    mcp2515_register_t idRegister;
+    mcp2515_register_t dataRegister;
+    mcp2515_instruction_t rtsInstruction;
+    switch (effectiveTXn) {
+        case MCP2515_TXB0:
+            controlRegister = MCP2515_TXB0CTRL;
+            idRegister = MCP2515_TXB0SIDH;
+            dataRegister = MCP2515_TXB0DO;
+            rtsInstruction = MCP2515_INSTRUCTION_RTS_TX0;
+            break;
+        case MCP2515_TXB1:
+            controlRegister = MCP2515_TXB1CTRL;
+            idRegister = MCP2515_TXB1SIDH;
+            dataRegister = MCP2515_TXB1DO;
+            rtsInstruction = MCP2515_INSTRUCTION_RTS_TX1;
+            break;
+        case MCP2515_TXB2:
+            controlRegister = MCP2515_TXB2CTRL;
+            idRegister = MCP2515_TXB2SIDH;
+            dataRegister = MCP2515_TXB2DO;
+            rtsInstruction = MCP2515_INSTRUCTION_RTS_TX2;
+            break;
+        default:
+            return ESP_ERR_INVALID_ARG;
+    }
+
+    // Prepare the buffer to load the frame and transmit
+    bool isExtendedFrame = frame->options & CAN_FRAME_OPTION_EXTENDED;
+
+    // Allocate a buffer large enough to contain the entire frame with data if present
+    //                     | TXB0CTRL | TXBnSIDH TXBnSIDL | TXBnDLC |   TXBnEID8 TXBnEID0   |
+    const uint8_t cmdCount =    1     +         2         +    1    + isExtendedFrame ? 2 : 0;
+    uint8_t transmitBuffer[cmdCount + frame->dlc];
+
+
+
+
+    // TODO: priority = 0 to 3 (3 highest) and setTREQ
+    // TODO
+    uint8_t priority = 3;
+    bool setTREQ = false; // TODO: Decide if we are setting the flag to send or reliying on pins or relying on SPI RTS command
+    
+    // TODO: Decide this
+    // TXBnCTRL - TXREQ[3] TXP[1:0]
+    transmitBuffer[0] = priority | setTREQ ? 0x04 : 0;
+
+    // Statndard ID - TXBnSIDH and TXBnSIDL
+    transmitBuffer[1] = internal_get_sid10_to_sid3(frame->id);
+    transmitBuffer[2] = internal_get_sid2_to_sid0(frame->id) << 5 | (isExtendedFrame ? (0x08 | internal_get_eid17_to_eid16(frame->id)) : 0);
+
+    // Extended ID configuration
+    if (isExtendedFrame) {
+        // TXBnEID8 and TXBnEID0
+        transmitBuffer[3] = internal_get_eid15_to_eid8(frame->id); 
+        transmitBuffer[4] = internal_get_eid7_to_eid0(frame->id);
+    }
+
+    // Data length - TXBnDLC
+    transmitBuffer[isExtendedFrame ? 5 : 3] = frame->dlc;
+
+    // Copy data
+    if (frame->dlc > 0) {
+        // TXBnDm
+        memcpy(&transmitBuffer[cmdCount], frame->data, frame->dlc);
+    }
+
+    // Log the prepared buffer for debugging
+    ESP_LOG_BUFFER_HEXDUMP(CanBusMCP2515LogTag, transmitBuffer, cmdCount + frame->dlc, ESP_LOG_INFO);
+
+
+    // TODO Make sure  TXREQ (TXBnCTRL[3]) is clear before writing to the register
+    bool readyToTransmit = false;
+    esp_err_t err = ESP_OK;
+    do {
+        uint8_t txbnctrl = 0;
+        err = mcp2515_read_register(handle, controlRegister, &txbnctrl);
+        if (err != ESP_OK) {
+            break;
+        }
+
+        readyToTransmit = (txbnctrl & 0x08) == 0;
+
+    } while (readyToTransmit);
+
+    if (err == ESP_OK) {
+
+        // Take exclusive access of the SPI bus while loading transmit buffers
+        ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
+
+            // Configure TXnIE via CANINTE
+            // TODO: configure only once - we should not be reconfiguring interrupts for each frame
+            esp_err_t err = mcp2515_write_register(handle, MCP2515_CANINTE, 0);
+            if (err == ESP_OK) {
+                // TODO: Load with more performant methods to reduce SPI size
+                // TODO: For extended frames, we can load all registers with a single auto incrementing 'WRITE' instruction
+                err = mcp2515_write_registers(handle, controlRegister, transmitBuffer, cmdCount);
+                if (err == ESP_OK) {
+                    if (frame->dlc > 0) {
+                        err = mcp2515_write_registers(handle, dataRegister, &transmitBuffer[cmdCount], frame->dlc);
+                    }
+                    
+                    if (err == ESP_OK) {
+                        // Send RTS to transmit the frame
+                        // TODO: Make this configurable
+                        err = mcp2515_send_single_byte_instruction(handle, rtsInstruction);
+                    }
+                }
+            }
+
+        // Release access to the SPI bus
+        spi_device_release_bus(handle->spi_device_handle);
+
+    }
+
+    // TODO: Wait for TXREQ bit (TXBnCTRL[3]) to become 0 indicating it was transmitted
+    
+    return err;
+}
+
+
 esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data) {
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_ARG;
@@ -468,7 +615,7 @@ esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_
     }
 
 
-    // Prepare the command buffer with the povided payload
+    // Prepare the command buffer with the provided payload
     const size_t transactionLenInBytes = 2UL + count;
     uint8_t writeBuffer[transactionLenInBytes];
     writeBuffer[0] = MCP2515_INSTRUCTION_WRITE;
@@ -532,6 +679,33 @@ esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_
     return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
 }
 
+esp_err_t mcp2515_send_single_byte_instruction(canbus_mcp2515_handle_t handle, const mcp2515_instruction_t instruction) {
+    // TODO: Validate in debug the instruction is a single byte instruction
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    //
+    // One byte MCP2515 instruction
+    //   * MOSI | <Instruction> |
+    //   * MISO |      N/A      |
+    //
+    const uint8_t transactionLengthInBytes = 1;
+    spi_transaction_t spiTransaction = {
+        .flags = SPI_TRANS_USE_TXDATA,
+        .length = transactionLengthInBytes * 8,
+        .rxlength = 0,
+        .tx_data = { instruction }
+    };
+
+    return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
+}
+
+
+
+
+
+
 static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config) {
     if (config == NULL) {
         return ESP_ERR_INVALID_ARG;
@@ -549,4 +723,30 @@ static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp25
     }
 
     return err;
+static esp_err_t internal_check_can_frame(const can_frame_t* frame) {
+    if (frame == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // Standard frames must have an ID within bounds
+    if (((frame->options & CAN_FRAME_OPTION_EXTENDED) == 0) && ((frame->id & 0x000007FFUL) != frame->id)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // Extended frames must have an ID within bounds
+    if ((frame->options & CAN_FRAME_OPTION_EXTENDED) && ((frame->id & 0x1FFFFFFFUL) != frame->id)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // Remote Transmission Requests must have no data
+    if ((frame->options & CAN_FRAME_OPTION_RTR) && (frame->dlc > 0)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // Data length must be within bounds
+    if (frame->dlc > CAN_MAX_DLC) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    return ESP_OK;
 }

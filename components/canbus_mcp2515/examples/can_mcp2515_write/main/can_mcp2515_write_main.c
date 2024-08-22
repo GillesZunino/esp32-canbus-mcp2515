@@ -99,8 +99,12 @@ void app_main(void) {
         frame.data[1] = frameCount;
 
         // Send frame
+        canbus_mcp2515_transmit_options_t sendOptions = {
+            .txb = MCP2515_TXB_AUTO
+        };
+
         ESP_LOGI(TAG, "Send frame with index %d", frameCount);
-        esp_err_t err = canbus_mcp2515_transmit(can_mcp2515_handle, &frame);
+        esp_err_t err = canbus_mcp2515_transmit(can_mcp2515_handle, &frame, &sendOptions);
         if (err != ESP_OK) {
             ESP_LOGE(TAG, "Failed to send frame with index %d - Error: %d", frameCount, err);
         }

@@ -8,6 +8,7 @@
 
 #include <esp_err.h>
 #include <driver/spi_master.h>
+#include <driver/gpio.h>
 
 #include "can.h"
 
@@ -38,7 +39,7 @@ typedef struct mcp2515_spi_config {
  * @brief Configuration of MCP2515 device.
  */
 typedef struct mcp2515_config {
-    mcp2515_spi_config_t spi_cfg;
+    mcp2515_spi_config_t spi_cfg;       ///< SPi configuration for MCp2515
 } mcp2515_config_t;
 
 /**
@@ -69,6 +70,40 @@ typedef struct mcp2515_bit_timing_config {
     uint8_t phase_seg1;                         // 1..8
     uint8_t phase_seg2;                         // 1..8
 } mcp2515_bit_timing_config_t;
+
+/**
+ * @brief MCP2515 Interrupts.
+ */
+typedef enum {
+    MCP2515_INTERRUPT_DISABLED = 0,
+    MCP2515_INTERRUPT_RX0_MSG_RECEIVED = 0x01,
+    MCP2515_INTERRUPT_RX1_MSG_RECEIVED = 0x02,
+    MCP2515_INTERRUPT_TX0_MSG_SENT = 0x04,
+    MCP2515_INTERRUPT_TX1_MSG_SENT = 0x08,
+    MCP2515_INTERRUPT_TX2_MSG_SENT = 0x10,
+    MCP2515_INTERRUPT_ERROR = 32,
+    MCP2515_INTERRUPT_WAKEUP = 64,
+    MCP2515_INTERRUPT_MESSAGE_ERROR = 128,
+
+    MCP2515_INTERRUPT_ALL_MSG_RECEIVED = MCP2515_INTERRUPT_RX0_MSG_RECEIVED | MCP2515_INTERRUPT_RX1_MSG_RECEIVED,
+    MCP2515_INTERRUPT_ALL_MSG_SENT = MCP2515_INTERRUPT_TX0_MSG_SENT | MCP2515_INTERRUPT_TX1_MSG_SENT | MCP2515_INTERRUPT_TX2_MSG_SENT,
+
+    MCP2515_INTERRUPT_ALL = MCP2515_INTERRUPT_ALL_MSG_RECEIVED | MCP2515_INTERRUPT_ALL_MSG_SENT | MCP2515_INTERRUPT_ERROR | MCP2515_INTERRUPT_WAKEUP | MCP2515_INTERRUPT_MESSAGE_ERROR
+} mcp2515_interrupts_t;
+
+/**
+ * @brief MCP2515 interrupt handler.
+ */
+typedef void (*mcp2515_interrupt_handler_t)(mcp2515_interrupts_t interrupt);
+
+/**
+ * @brief MCP2515 Interrupt configuration.
+ */
+typedef struct mcp2515_interrupt_config {
+    gpio_num_t intr_io_num;
+    mcp2515_interrupts_t flags;
+    mcp2515_interrupt_handler_t handler;
+} mcp2515_interrupt_config_t;
 
 /**
  * @brief MCP2515 CLKOUT / SOF mode.
@@ -234,6 +269,11 @@ esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle);
  *        - ESP_ERR_INVALID_STATE: MCP2515 device is not in use
  */
 esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle);
+
+
+
+esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_interrupt_config_t* config);
+
 
 /**
  * @brief Get the operation mode of the MCP2515 device.

@@ -13,6 +13,7 @@ static const char* CanBusMCP2515LogTag = "canbus-mcp2515";
 
 typedef struct canbus_mcp2515 {
     mcp2515_bit_timing_config_t bit_timing_config;
+    mcp2515_interrupt_config_t interrupt_config;
     spi_device_handle_t spi_device_handle;
 } canbus_mcp2515_t;
 
@@ -107,6 +108,52 @@ esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle) {
     //   * MISO | N/A  |
     //
     return mcp2515_send_single_byte_instruction(handle, MCP2515_INSTRUCTION_RESET);
+}
+
+
+esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_interrupt_config_t* config) {
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    // TODO: Check interrupt configuration
+
+    esp_err_t ret = ESP_OK;
+
+    // Configure the GPIO pin to listen to the MCP2515 interrupt signal
+    gpio_config_t gpioConfig = {
+        .pin_bit_mask = 1ULL << config->intr_io_num,
+        .mode = GPIO_MODE_INPUT, 
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_NEGEDGE
+    };
+    ESP_GOTO_ON_ERROR(gpio_config(&gpioConfig), cleanup, CanBusMCP2515LogTag, "%s() Failed to configure GPIO pin %d", __func__, config->intr_io_num);
+
+    // Attach the interrupt handler to the GPIO pin
+    // TODO: Chosoe the right interrupt attachmecanism
+    //ESP_GOTO_ON_ERROR
+    //gpio_isr_register(gpio_num_t gpio_num, gpio_isr_t isr_handler, void *args, int intr_alloc_flags, esp_err_t *err);
+    //OR
+    //gpio_install_isr_service() and gpio_isr_handler_add() 
+    // TODO: Interrupt allocation - https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32/api-reference/system/intr_alloc.html
+
+
+    // Configure the desired interrupts via CANINTE[7:0]
+    uint8_t caninte = config->flags;
+    ESP_GOTO_ON_ERROR(mcp2515_write_register(handle, MCP2515_CANINTE, caninte), cleanup, CanBusMCP2515LogTag, "%s() Failed to configure MCP2515 [CANINTE]", __func__);
+
+    // Copy config for future reference
+    handle->interrupt_config = *config;
+
+    return ret;
+
+cleanup:
+    // TODO: Reset gpio config
+    // TODO: Detach ISR handler
+    // TODO: Disable interrupts on MCP2515 on failure
+    
+    return ret;
 }
 
 esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* pMode) {

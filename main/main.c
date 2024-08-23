@@ -75,7 +75,6 @@ void app_main(void) {
     ESP_LOGI(TAG, "Configure MCP2515 CLKOUT/SOF pin");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_clkout_sof(can_mcp2515_handle, &clkoutSofConfig));
 
-
     // Configure MCP2515 TXnRST pin behavior
     mcp2515_txnrts_pins_config_t txnrtsConfig = {
         .tx0rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT,
@@ -124,8 +123,14 @@ void app_main(void) {
     ESP_LOGI(TAG, "Configure MCP2515 Extended frame filter RXF2");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_receive_filter(can_mcp2515_handle, &rxf2ExtendedFrameFilter));
 
-
-    // ESP_ERROR_CHECK(canbus_mcp2515_set_isr_handler());
+    // Configure interrupts
+    mcp2515_interrupt_config_t interruptsConfig = {
+        .flags = MCP2515_INTERRUPT_ALL, // Enable all interrupts
+        .intr_io_num = GPIO_NUM_13, // GPI_NUM_NC
+        .handler = mcp2515_interrupt_handler
+    };
+    ESP_LOGI(TAG, "Configure MCP2515 interrupts");
+    ESP_ERROR_CHECK(canbus_mcp2515_configure_interrupts(can_mcp2515_handle, &interruptsConfig));
 
     // Standard CAN frame which will pass filtering
     can_frame_t filterdInStandardFrame = {

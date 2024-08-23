@@ -712,6 +712,10 @@ static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config) {
         return ESP_ERR_INVALID_ARG;
     }
 
+    // MCP2515 data sheet indicates the SPI clock is 10MHz maximum
+    if (config->spi_cfg.clock_speed_hz > 10 * 1000000) {
+        return ESP_ERR_INVALID_ARG;
+    }
 
     return ESP_OK;
 }

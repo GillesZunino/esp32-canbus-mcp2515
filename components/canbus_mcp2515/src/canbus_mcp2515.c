@@ -19,6 +19,7 @@ typedef struct canbus_mcp2515 {
 
 static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config);
 static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp2515_handle_t handle);
+static esp_err_t internal_check_can_frame(const can_frame_t* frame);
 
 
 esp_err_t canbus_mcp2515_init(const mcp2515_config_t* config, canbus_mcp2515_handle_t* handle) {

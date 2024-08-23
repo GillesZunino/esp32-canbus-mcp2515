@@ -156,6 +156,20 @@ cleanup:
     return ret;
 }
 
+esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, mcp2515_interrupts_t flags) {
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    // Interrupts must have been configured to reset them
+    if (handle->interrupt_config.flags == MCP2515_INTERRUPT_DISABLED) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    // Reset interrupt flags via CANINTF[7:0]
+    return mcp2515_modify_register(handle, MCP2515_CANINTF, 0, flags);
+}
+
 esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* pMode) {
     if (pMode == NULL) {
         return ESP_ERR_INVALID_ARG;

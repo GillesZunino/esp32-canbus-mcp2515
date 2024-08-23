@@ -517,7 +517,7 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
 
         readyToTransmit = (txbnctrl & 0x08) == 0;
 
-    } while (readyToTransmit);
+    } while (!readyToTransmit);
 
     if (err == ESP_OK) {
 

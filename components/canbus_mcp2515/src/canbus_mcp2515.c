@@ -156,6 +156,15 @@ cleanup:
     return ret;
 }
 
+esp_err_t canbus_mcp2515_get_interrupt_flags(canbus_mcp2515_handle_t handle, uint8_t* flags) {
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    return mcp2515_read_register(handle, MCP2515_CANINTF, flags);
+}
+
+
 esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, mcp2515_interrupts_t flags) {
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_STATE;

@@ -379,7 +379,7 @@ esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txr
     uint8_t stagedTxrts;
     esp_err_t err = mcp2515_read_register(handle, MCP2515_TXRTSCTRL, &stagedTxrts);
     if (err == ESP_OK) {
-        *txrts = (stagedTxrts & 0x70) >> 4;
+        *txrts = (stagedTxrts >> 3) & 0x07;
     } else {
         *txrts = 0;
     }
@@ -728,6 +728,8 @@ static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp25
     }
 
     return err;
+}
+
 static esp_err_t internal_check_can_frame(const can_frame_t* frame) {
     if (frame == NULL) {
         return ESP_ERR_INVALID_ARG;

@@ -53,7 +53,7 @@
       "setupCommands": [
         { "text": "target extended-remote :3333" },
         { "text": "set mem inaccessible-by-default off" },
-        { "text": "set remote hardware-watchpoint-limit 2" },
+        { "text": "set remote hardware-watchpoint-limit {IDF_TARGET_CPU_WATCHPOINT_NUM}" },
         { "text": "monitor reset halt" },
         { "text": "maintenance flush register-cache" }
       ],

@@ -125,9 +125,7 @@ void app_main(void) {
 
     // Configure interrupts
     mcp2515_interrupt_config_t interruptsConfig = {
-        .flags = MCP2515_INTERRUPT_ALL, // Enable all interrupts
-        .intr_io_num = GPIO_NUM_13, // GPI_NUM_NC
-        .handler = mcp2515_interrupt_handler
+        .flags = MCP2515_INTERRUPT_DISABLED
     };
     ESP_LOGI(TAG, "Configure MCP2515 interrupts");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_interrupts(can_mcp2515_handle, &interruptsConfig));

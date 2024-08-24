@@ -75,7 +75,7 @@ void app_main(void) {
     ESP_LOGI(TAG, "Configure MCP2515 CLKOUT/SOF pin");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_clkout_sof(can_mcp2515_handle, &clkoutSofConfig));
 
-    // Configure MCP2515 TXnRST pin behavior
+    // Configure MCP2515 TXnRST pins behavior
     mcp2515_txnrts_pins_config_t txnrtsConfig = {
         .tx0rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT,
         .tx1rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT,
@@ -83,6 +83,14 @@ void app_main(void) {
     };
     ESP_LOGI(TAG, "Configure MCP2515 TXnRST pins to digital input");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_txnrts(can_mcp2515_handle, &txnrtsConfig));
+
+    // Configure MCP2515 RXnBF pins behavior
+    mcp2515_rxnbf_pins_config_t rxnbfConfig = {
+        .rx0bf = MCP2515_RXnBF_PIN_DIGITAL_OUTPUT,
+        .rx1bf = MCP2515_RXnBF_PIN_DIGITAL_OUTPUT
+    };
+    ESP_LOGI(TAG, "Configure MCP2515 RXnBF pins to digital output");
+    ESP_ERROR_CHECK(canbus_mcp2515_configure_rxnbf(can_mcp2515_handle, &rxnbfConfig));
 
     // Configure MCP2515 CAN bit timings - See CAN bit timing calculator in README
     mcp2515_bit_timing_config_t bitTimingConfig = {
@@ -172,6 +180,8 @@ void app_main(void) {
     const TickType_t DelayBetweenFrames = pdMS_TO_TICKS(1000);
 
     uint8_t framesSent = 0;
+    bool rx0bfState = false;
+    uint8_t rx1Counter = 0;
     do {
         // Send a frame if necessary
         if (framesSent <= NumberOfFramesToSend) {
@@ -220,6 +230,14 @@ void app_main(void) {
         uint8_t txnrts = 0;
         ESP_ERROR_CHECK(canbus_mcp2515_get_txnrts(can_mcp2515_handle, &txnrts));
         ESP_LOGI(TAG, "Digital Inputs - TX0RTS: %s | TX1RTS: %s | TX2RTS: %s", (txnrts & MCP2515_TXnRTS_PIN_TX0) ? "HIGH" : "LOW", (txnrts & MCP2515_TXnRTS_PIN_TX1) ? "HIGH" : "LOW", (txnrts & MCP2515_TXnRTS_PIN_TX2) ? "HIGH" : "LOW");
+
+        // Toggle digital outputs via RXnBF
+        rx0bfState = !rx0bfState;                   // RX0BF goes from HIGH to LOW on every loop
+        bool rx1bfState = (++rx1Counter) % 3 == 0;  // RX1BF goes from HIGH to LOW on every three loops
+        if (rx1bfState) { rx1Counter = 0; }
+        ESP_ERROR_CHECK(canbus_mcp2515_set_rxnbf(can_mcp2515_handle, MCP2515_RXnBF_PIN_RX0, rx0bfState));
+        ESP_ERROR_CHECK(canbus_mcp2515_set_rxnbf(can_mcp2515_handle, MCP2515_RXnBF_PIN_RX0, rx1bfState));
+        ESP_LOGI(TAG, "Digital Outputs - RX0BF: %s | RX1BF: %s", rx0bfState ? "HIGH" : "LOW", rx1bfState ? "HIGH" : "LOW");
 
         vTaskDelay(DelayBetweenFrames);
     } while (true);

@@ -457,6 +457,29 @@ esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txr
     return err;
 }
 
+esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mcp2515_rxnbf_pins_config_t* config) {
+    // Handle must have been initialized, which means we have configured the SPI device
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    // Options neeed to be specified
+    if (config == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // BFPCTRL - BnBFE, BnBFM, BnBFS - We default digital outputs to LOW
+    uint8_t bfpctrl = (config->rx0bf == MCP2515_RXnBF_PIN_DISABLED ? 0 : (config->rx0bf == MCP2515_RXnBF_PIN_BUFFER_FULL_INT ? 0x05 : 0x04))  |
+                      (config->rx1bf == MCP2515_RXnBF_PIN_DISABLED ? 0 : (config->rx1bf == MCP2515_RXnBF_PIN_BUFFER_FULL_INT ? 0x0A: 0x08));
+    return mcp2515_modify_register(handle, MCP2515_BFPCTRL, bfpctrl, 0x3F);
+}
+
+esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf_pin_t rxnbf, bool level) {
+    // TODO: Ensure this is consistent with the configuration made - So we do not try to use as digital out something configured for interrupts or disabled
+    uint8_t bfpctrl = rxnbf == MCP2515_RXnBF_PIN_RX0 ? (level ? 0x10: 0) : (level ? 0x20 : 0);
+    uint8_t mask = rxnbf == MCP2515_RXnBF_PIN_RX0 ? 0x10 : 0x20;
+    return mcp2515_modify_register(handle, MCP2515_BFPCTRL, bfpctrl, mask);
+}
 
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
     return mcp2515_read_register(handle, MCP2515_TEC, count);

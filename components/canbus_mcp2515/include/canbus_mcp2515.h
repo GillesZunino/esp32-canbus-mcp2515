@@ -151,6 +151,24 @@ typedef struct mcp2515_txnrts_pins_config {
 #define MCP2515_TXnRTS_PIN_TX1 2
 #define MCP2515_TXnRTS_PIN_TX2 4
 
+
+
+typedef enum {
+    MCP2515_RXnBF_PIN_DISABLED = 0,
+    MCP2515_RXnBF_PIN_BUFFER_FULL_INT = 1,
+    MCP2515_RXnBF_PIN_DIGITAL_OUTPUT = 2
+} mcp2515_rxnbf_pin_mode_t;
+
+typedef struct mcp2515_rxnbf_pins_config {
+    mcp2515_rxnbf_pin_mode_t rx0bf;
+    mcp2515_rxnbf_pin_mode_t rx1bf;
+} mcp2515_rxnbf_pins_config_t;
+
+typedef enum {
+    MCP2515_RXnBF_PIN_RX0 = 1,
+    MCP2515_RXnBF_PIN_RX1 = 2
+} mcp2515_rxnbf_pin_t;
+
 /**
  * @brief MCP2515 Receive filters.
  */
@@ -348,7 +366,8 @@ esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txr
 esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const canbus_mcp2515_transmit_options_t* options); 
 
 
-
+esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mcp2515_rxnbf_pins_config_t* config);
+esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf_pin_t rxnbf, bool level);
 
 
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count);

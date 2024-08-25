@@ -474,7 +474,7 @@ esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mc
     return mcp2515_modify_register(handle, MCP2515_BFPCTRL, bfpctrl, 0x3F);
 }
 
-esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf_pin_t rxnbf, bool level) {
+esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf_pin_t rxnbf, uint32_t level) {
     // TODO: Ensure this is consistent with the configuration made - So we do not try to use as digital out something configured for interrupts or disabled
     uint8_t bfpctrl = rxnbf == MCP2515_RXnBF_PIN_RX0 ? (level ? 0x10: 0) : (level ? 0x20 : 0);
     uint8_t mask = rxnbf == MCP2515_RXnBF_PIN_RX0 ? 0x10 : 0x20;

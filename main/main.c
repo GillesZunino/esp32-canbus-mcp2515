@@ -180,7 +180,9 @@ void app_main(void) {
     const TickType_t DelayBetweenFrames = pdMS_TO_TICKS(1000);
 
     uint8_t framesSent = 0;
-    bool rx0bfState = false;
+
+    // Used to toggle digitial outputs (RXnBF) HIGH and LOW
+    uint8_t rx0Counter = 0;
     uint8_t rx1Counter = 0;
     do {
         // Send a frame if necessary
@@ -232,12 +234,12 @@ void app_main(void) {
         ESP_LOGI(TAG, "Digital Inputs - TX0RTS: %s | TX1RTS: %s | TX2RTS: %s", (txnrts & MCP2515_TXnRTS_PIN_TX0) ? "HIGH" : "LOW", (txnrts & MCP2515_TXnRTS_PIN_TX1) ? "HIGH" : "LOW", (txnrts & MCP2515_TXnRTS_PIN_TX2) ? "HIGH" : "LOW");
 
         // Toggle digital outputs via RXnBF
-        rx0bfState = !rx0bfState;                   // RX0BF goes from HIGH to LOW on every loop
-        bool rx1bfState = (++rx1Counter) % 3 == 0;  // RX1BF goes from HIGH to LOW on every three loops
-        if (rx1bfState) { rx1Counter = 0; }
-        ESP_ERROR_CHECK(canbus_mcp2515_set_rxnbf(can_mcp2515_handle, MCP2515_RXnBF_PIN_RX0, rx0bfState));
-        ESP_ERROR_CHECK(canbus_mcp2515_set_rxnbf(can_mcp2515_handle, MCP2515_RXnBF_PIN_RX0, rx1bfState));
-        ESP_LOGI(TAG, "Digital Outputs - RX0BF: %s | RX1BF: %s", rx0bfState ? "HIGH" : "LOW", rx1bfState ? "HIGH" : "LOW");
+        rx0Counter = (rx0Counter + 1) % 2;  // RX0BF goes from HIGH to LOW on every loop        
+        rx1Counter = (rx1Counter + 1) % 6;  // RX1BF goes from HIGH to LOW on every three loops
+        bool rx1State = rx1Counter < 3;    
+        ESP_ERROR_CHECK(canbus_mcp2515_set_rxnbf(can_mcp2515_handle, MCP2515_RXnBF_PIN_RX0, rx0Counter));
+        ESP_ERROR_CHECK(canbus_mcp2515_set_rxnbf(can_mcp2515_handle, MCP2515_RXnBF_PIN_RX1, rx1State));
+        ESP_LOGI(TAG, "Digital Outputs - RX0BF: %s | RX1BF: %s", rx0Counter ? "HIGH" : "LOW", rx1State ? "HIGH" : "LOW");
 
         vTaskDelay(DelayBetweenFrames);
     } while (true);

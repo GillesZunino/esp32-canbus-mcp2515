@@ -13,6 +13,7 @@ static const char* CanBusMCP2515LogTag = "canbus-mcp2515";
 
 typedef struct canbus_mcp2515 {
     mcp2515_bit_timing_config_t bit_timing_config;
+    mcp2515_rxnbf_pins_config_t rxnbf_config;
     mcp2515_interrupt_config_t interrupt_config;
     spi_device_handle_t spi_device_handle;
 } canbus_mcp2515_t;
@@ -471,13 +472,47 @@ esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mc
     // BFPCTRL - BnBFE, BnBFM, BnBFS - We default digital outputs to LOW
     uint8_t bfpctrl = (config->rx0bf == MCP2515_RXnBF_PIN_DISABLED ? 0 : (config->rx0bf == MCP2515_RXnBF_PIN_BUFFER_FULL_INT ? 0x05 : 0x04))  |
                       (config->rx1bf == MCP2515_RXnBF_PIN_DISABLED ? 0 : (config->rx1bf == MCP2515_RXnBF_PIN_BUFFER_FULL_INT ? 0x0A: 0x08));
-    return mcp2515_modify_register(handle, MCP2515_BFPCTRL, bfpctrl, 0x3F);
+    esp_err_t err = mcp2515_modify_register(handle, MCP2515_BFPCTRL, bfpctrl, 0x3F);
+    if (err == ESP_OK) {
+        // TODO: Is this enough to keep the config sync'ed
+        handle->rxnbf_config = *config;
+    }
+
+    return err;
 }
 
 esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf_pin_t rxnbf, uint32_t level) {
-    // TODO: Ensure this is consistent with the configuration made - So we do not try to use as digital out something configured for interrupts or disabled
-    uint8_t bfpctrl = rxnbf == MCP2515_RXnBF_PIN_RX0 ? (level ? 0x10: 0) : (level ? 0x20 : 0);
-    uint8_t mask = rxnbf == MCP2515_RXnBF_PIN_RX0 ? 0x10 : 0x20;
+        // Handle must have been initialized, which means we have configured the SPI device
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    uint8_t bfpctrl;
+    uint8_t mask;
+
+    // Ensure the requested pin is configured for digital output and calculate correct BFPCTRL and mask
+    switch (rxnbf) {
+        case MCP2515_RXnBF_PIN_RX0:
+            if (handle->rxnbf_config.rx0bf != MCP2515_RXnBF_PIN_DIGITAL_OUTPUT) {
+                return ESP_ERR_INVALID_STATE;
+            }
+            bfpctrl = level ? 0x10: 0;
+            mask = 0x10;
+        break;
+
+        case MCP2515_RXnBF_PIN_RX1:
+            if (handle->rxnbf_config.rx1bf != MCP2515_RXnBF_PIN_DIGITAL_OUTPUT) {
+                return ESP_ERR_INVALID_STATE;
+            }
+            bfpctrl = level ? 0x20 : 0;
+            mask = 0x20;
+        break;
+
+        default:
+            return ESP_ERR_INVALID_ARG;
+    }
+
+    // Modify the correct bits in BFPCTRL to control the digital output
     return mcp2515_modify_register(handle, MCP2515_BFPCTRL, bfpctrl, mask);
 }
 

@@ -427,7 +427,7 @@ esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, co
         return ESP_ERR_INVALID_ARG;
     }
 
-    // CLKOUT/SOF requires the pin ot be enabled if it is to beused for any signal
+    // CLKOUT/SOF requires the pin to be enabled if it is to be used for any signal
     bool enable_clkoutPin = (config->mode == MCP2515_CLKOUT_PIN_SOF) || (config->mode == MCP2515_CLKOUT_PIN_CLKOUT);
 
     // Configure CLKOUT pin via CLKEN (CANCTRL[2]) and CLKPRE (CANCTRL[1:0])
@@ -576,14 +576,56 @@ inline static uint32_t internal_get_eid7_to_eid0(const uint32_t id) {
     return (id & CAN_EFF_MASK) & 0xFF;
 }
 
-
-
 esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const canbus_mcp2515_transmit_options_t* options) {
+    // TODO: Validate handle
+    
     // Validate the frame
     ESP_RETURN_ON_ERROR(internal_check_can_frame(frame), CanBusMCP2515LogTag, "%s() Invalid CAN frame", __func__);
 
-    // TODO: Select the right register - We hard code for now
-    mcp2515_TXBn_t effectiveTXn = options->txb == MCP2515_TXB_AUTO ? MCP2515_TXB0 : options->txb;
+    // TODO: Validate options
+
+    // Select the transmit buffer to use
+    mcp2515_TXBn_t effectiveTXn = options->txb;
+    if (options->txb == MCP2515_TXB_AUTO) {
+        // Find the next available buffer - A buffer is considered 'available' if the following condition is met:
+        //  * The buffer must not be pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
+        uint8_t txbnctrl = 0;
+        esp_err_t err = mcp2515_read_register(handle, MCP2515_TXB0CTRL, &txbnctrl);
+        if (err == ESP_OK) {
+            if ((txbnctrl & 0x08) == 0) {
+                // TXB0 is available
+                effectiveTXn = MCP2515_TXB0CTRL;
+            } else {
+                err = mcp2515_read_register(handle, MCP2515_TXB1CTRL, &txbnctrl);
+                if (err == ESP_OK)  {
+                    if ((txbnctrl & 0x08) == 0) {
+                        // TXB1 is available
+                        effectiveTXn = MCP2515_TXB1CTRL;
+                    } else {
+                        err = mcp2515_read_register(handle, MCP2515_TXB2CTRL, &txbnctrl);
+                        if (err == ESP_OK) {
+                             if ((txbnctrl & 0x08) == 0) {
+                                // TXB2 is available
+                                effectiveTXn = MCP2515_TXB2CTRL;
+                            } else {
+                                err = ESP_ERR_NOT_FOUND;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+       ESP_RETURN_ON_ERROR(err, CanBusMCP2515LogTag, "%s() Failed to choose a suitable TXBnCTRL register", __func__);
+    } else {
+        // Confirm the chosen buffer is not be pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
+        esp_err_t ret;
+        uint8_t txbnctrl = 0;
+        ESP_RETURN_ON_ERROR(mcp2515_read_register(handle, effectiveTXn, &txbnctrl), CanBusMCP2515LogTag, "%s() Failed to read TXBnCTRL register", __func__);
+        if (txbnctrl & 0x08) {
+            return ESP_ERR_INVALID_STATE;
+        }
+    }
 
     // TODO: Do we even need to send RTS ? We might not if the pins were configured to fire the message
     // Select the correct transmit register and RTS instruction to send

@@ -419,7 +419,7 @@ esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t
 
     // Configure WAKFIL via CANCTRL[6]
     uint8_t cnf3 = filter == MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED ? 0x40 : 0x00;
-    return mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, cnf3);
+    return mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, 0x40);
 }
 
 esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config) {
@@ -706,6 +706,16 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     // TODO: Wait for TXREQ bit (TXBnCTRL[3]) to become 0 indicating it was transmitted
     
     return err;
+}
+
+esp_err_t canbus_mcp2515_set_transmit_abort(canbus_mcp2515_handle_t handle, mcp2515_transmit_t mode) {
+    // validate configuration
+    if ((mode != MCP2515_TRANSMIT_ALLOWED) && (mode != MCP2515_TRANSMIT_ABORT)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    uint8_t canctrl = mode == MCP2515_TRANSMIT_ABORT ? 0x40 : 0x00;
+    return mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x40); 
 }
 
 

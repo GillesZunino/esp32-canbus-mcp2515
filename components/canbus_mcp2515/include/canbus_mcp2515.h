@@ -175,6 +175,13 @@ typedef enum {
     MCP2515_RXnBF_PIN_RX1 = 2
 } mcp2515_rxnbf_pin_t;
 
+
+typedef enum {
+    MCP2515_TRANSMIT_ALLOWED = 0,
+    MCP2515_TRANSMIT_ABORT = 1
+} mcp2515_transmit_t;
+
+
 /**
  * @brief MCP2515 Receive filters.
  */
@@ -395,6 +402,15 @@ esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf
  * @param options   Transmit options
  */
 esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const canbus_mcp2515_transmit_options_t* options); 
+
+
+/**
+ * @brief Request the MCP2515 to abort all pending transmissions.
+ * @param handle    Handle of the MCP2515 device
+ */
+esp_err_t canbus_mcp2515_set_transmit_abort(canbus_mcp2515_handle_t handle, mcp2515_transmit_t mode);
+
+
 
 
 esp_err_t canbus_mcp2515_polling_receive(canbus_mcp2515_handle_t handle, can_frame_t* frame);

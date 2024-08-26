@@ -215,8 +215,9 @@ void app_main(void) {
 
             pCanFrame->data[0] = framesSent;
 
-            canbus_mcp2515_transmit_options_t sendOptions = {
-                .txb = MCP2515_TXB_AUTO
+            mcp2515_transmit_options_t sendOptions = {
+                .txb = MCP2515_TXB_AUTO,
+                .priority = MCP1515_TRANSMIT_PRIORITY_MEDIUM 
             };
 
             ESP_LOGI(TAG, "Sending frame with index %d", framesSent);

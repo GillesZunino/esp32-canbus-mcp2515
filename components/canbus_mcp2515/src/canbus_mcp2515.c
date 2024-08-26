@@ -110,7 +110,6 @@ esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle) {
     return mcp2515_send_single_byte_instruction(handle, MCP2515_INSTRUCTION_RESET);
 }
 
-
 esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_interrupt_config_t* config) {
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_STATE;
@@ -576,7 +575,7 @@ inline static uint32_t internal_get_eid7_to_eid0(const uint32_t id) {
     return (id & CAN_EFF_MASK) & 0xFF;
 }
 
-esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const canbus_mcp2515_transmit_options_t* options) {
+esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const mcp2515_transmit_options_t* options) {
     // TODO: Validate handle
     
     // Validate the frame
@@ -616,7 +615,7 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
         }
         ESP_RETURN_ON_ERROR(err, CanBusMCP2515LogTag, "%s() Failed to choose a suitable TXBnCTRL register", __func__);
     } else {
-        // Confirm the chosen buffer is not pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
+        // Confirm the desired buffer is not pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
         esp_err_t ret;
         uint8_t txbnctrl = 0;
         ESP_RETURN_ON_ERROR(mcp2515_read_register(handle, effectiveTXn, &txbnctrl), CanBusMCP2515LogTag, "%s() Failed to read TXBnCTRL register", __func__);
@@ -662,23 +661,14 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     const uint8_t cmdCount =    1     +         2         +    1    + isExtendedFrame ? 2 : 0;
     uint8_t transmitBuffer[cmdCount + frame->dlc];
 
+    // Set priority via TXP[1:0] (TXBnCTRL) - We leave TXREQ[3] (TXBnCTRL) set to false as we will send the RTS SPI command when all bufers have been loaded 
+    transmitBuffer[0] = options->priority & 0x03;
 
-
-
-    // TODO: priority = 0 to 3 (3 highest) and setTREQ
-    // TODO
-    uint8_t priority = 3;
-    bool setTREQ = false; // TODO: Decide if we are setting the flag to send or reliying on pins or relying on SPI RTS command
-    
-    // TODO: Decide this
-    // TXBnCTRL - TXREQ[3] TXP[1:0]
-    transmitBuffer[0] = priority | setTREQ ? 0x04 : 0;
-
-    // Statndard ID - TXBnSIDH and TXBnSIDL
+    // Prepare Standard ID - TXBnSIDH and TXBnSIDL
     transmitBuffer[1] = internal_get_sid10_to_sid3(frame->id);
     transmitBuffer[2] = internal_get_sid2_to_sid0(frame->id) << 5 | (isExtendedFrame ? (0x08 | internal_get_eid17_to_eid16(frame->id)) : 0);
 
-    // Extended ID configuration
+    // Prepare Extended ID configuration
     if (isExtendedFrame) {
         // TXBnEID8 and TXBnEID0
         transmitBuffer[3] = internal_get_eid15_to_eid8(frame->id); 
@@ -697,52 +687,34 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     // Log the prepared buffer for debugging
     ESP_LOG_BUFFER_HEXDUMP(CanBusMCP2515LogTag, transmitBuffer, cmdCount + frame->dlc, ESP_LOG_INFO);
 
+    // Take exclusive access of the SPI bus while loading transmit buffers
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
 
-    // TODO Make sure  TXREQ (TXBnCTRL[3]) is clear before writing to the register
-    bool readyToTransmit = false;
-    esp_err_t err = ESP_OK;
-    do {
-        uint8_t txbnctrl = 0;
-        err = mcp2515_read_register(handle, controlRegister, &txbnctrl);
-        if (err != ESP_OK) {
-            break;
-        }
-
-        readyToTransmit = (txbnctrl & 0x08) == 0;
-
-    } while (!readyToTransmit);
-
-    if (err == ESP_OK) {
-        // Take exclusive access of the SPI bus while loading transmit buffers
-        ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
-
-            // Configure TXnIE via CANINTE
-            // TODO: configure only once - we should not be reconfiguring interrupts for each frame
-            esp_err_t err = mcp2515_write_register(handle, MCP2515_CANINTE, 0);
+        // Configure TXnIE via CANINTE
+        // TODO: configure only once - we should not be reconfiguring interrupts for each frame
+        esp_err_t err = mcp2515_write_register(handle, MCP2515_CANINTE, 0);
+        if (err == ESP_OK) {
+            // TODO: Load with more performant methods to reduce SPI size
+            // TODO: For extended frames, we can load all registers with a single auto incrementing 'WRITE' instruction
+            err = mcp2515_write_registers(handle, controlRegister, transmitBuffer, cmdCount);
             if (err == ESP_OK) {
-                // TODO: Load with more performant methods to reduce SPI size
-                // TODO: For extended frames, we can load all registers with a single auto incrementing 'WRITE' instruction
-                err = mcp2515_write_registers(handle, controlRegister, transmitBuffer, cmdCount);
-                if (err == ESP_OK) {
-                    if (frame->dlc > 0) {
-                        err = mcp2515_write_registers(handle, dataRegister, &transmitBuffer[cmdCount], frame->dlc);
-                    }
-                    
+                if (frame->dlc > 0) {
+                    err = mcp2515_write_registers(handle, dataRegister, &transmitBuffer[cmdCount], frame->dlc);
+                }
+                
+                // Send RTS to start frame transmission, if RTS send is allowed
+                if (!options->disable_rts) {
                     if (err == ESP_OK) {
                         // Send RTS to transmit the frame
-                        // TODO: Make this configurable
                         err = mcp2515_send_single_byte_instruction(handle, rtsInstruction);
                     }
                 }
             }
+        }
 
-        // Release access to the SPI bus
-        spi_device_release_bus(handle->spi_device_handle);
+    // Release access to the SPI bus
+    spi_device_release_bus(handle->spi_device_handle);
 
-    }
-
-    // TODO: Wait for TXREQ bit (TXBnCTRL[3]) to become 0 indicating it was transmitted
-    
     return err;
 }
 

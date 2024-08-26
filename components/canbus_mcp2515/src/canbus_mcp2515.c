@@ -584,11 +584,10 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
 
     // TODO: Validate options
 
-    // Select the transmit buffer to use
+    // When 'MCP2515_TXB_AUTO' is specified, select the transmit buffer to use
     mcp2515_TXBn_t effectiveTXn = options->txb;
     if (options->txb == MCP2515_TXB_AUTO) {
-        // Find the next available buffer - A buffer is considered 'available' if the following condition is met:
-        //  * The buffer must not be pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
+        // A buffer is considered 'available' if the buffer is not be pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
         uint8_t txbnctrl = 0;
         esp_err_t err = mcp2515_read_register(handle, MCP2515_TXB0CTRL, &txbnctrl);
         if (err == ESP_OK) {
@@ -615,10 +614,9 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
                 }
             }
         }
-
-       ESP_RETURN_ON_ERROR(err, CanBusMCP2515LogTag, "%s() Failed to choose a suitable TXBnCTRL register", __func__);
+        ESP_RETURN_ON_ERROR(err, CanBusMCP2515LogTag, "%s() Failed to choose a suitable TXBnCTRL register", __func__);
     } else {
-        // Confirm the chosen buffer is not be pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
+        // Confirm the chosen buffer is not pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
         esp_err_t ret;
         uint8_t txbnctrl = 0;
         ESP_RETURN_ON_ERROR(mcp2515_read_register(handle, effectiveTXn, &txbnctrl), CanBusMCP2515LogTag, "%s() Failed to read TXBnCTRL register", __func__);
@@ -715,7 +713,6 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     } while (!readyToTransmit);
 
     if (err == ESP_OK) {
-
         // Take exclusive access of the SPI bus while loading transmit buffers
         ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
 

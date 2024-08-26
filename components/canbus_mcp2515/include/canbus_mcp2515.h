@@ -151,7 +151,13 @@ typedef struct mcp2515_txnrts_pins_config {
 #define MCP2515_TXnRTS_PIN_TX1 2
 #define MCP2515_TXnRTS_PIN_TX2 4
 
-
+/**
+ * @brief MCP2515 Wake-up low pass filter configuration.
+ */
+typedef enum mcp2515_wakeup_filter {
+    MCP2515_WAKEUP_LOWPASS_FILTER_DISABLED = 0,    ///< Wakeup low pass filter disabled
+    MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED = 1      ///< Wakeup low pass filter enabled
+} mcp2515_wakeup_lowpass_filter_t;
 
 typedef enum {
     MCP2515_RXnBF_PIN_DISABLED = 0,
@@ -336,6 +342,14 @@ esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const
 esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter);
 
 /**
+ * @brief Configure MCP2515 Wake-up low pass filter.
+ * @note When in sleep mode, the MCP2515 has an optional low pass filter on the CAN bus to reduce chances of waking up on transient bus noise.
+ * @param handle    Handle of the MCP2515 device
+ * @param filter    Wake-up low pass filter configuration
+ */
+esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t handle, mcp2515_wakeup_lowpass_filter_t filter);
+
+/**
  * @brief Configure MCP2515 CLKOUT pin behavior.
  * @param handle    Handle of the MCP2515 device
  * @param config    CLKOUT/SOF pin configuration
@@ -358,6 +372,23 @@ esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const 
 esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txrts);
 
 /**
+ * @brief Configure MCP2515 RXnBF pins.
+ * @param handle    Handle of the MCP2515 device
+ * @param config    RXnBF pins configuration
+ */
+esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mcp2515_rxnbf_pins_config_t* config);
+
+/**
+ * @brief Set the state of the MCP2515 RXnBF pins when configured as digital output.
+ * @param handle    Handle of the MCP2515 device
+ * @param rxnbf     RXnBF pin to set
+ * @param level     Level to set, 0 for low, 1 (or non 0) bfor high
+ */
+esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf_pin_t rxnbf, uint32_t level);
+
+
+
+/**
  * @brief Transmit an MCP2515 register.
  * @param handle    Handle of the MCP2515 device
  * @param frame     Frame to transmit
@@ -366,13 +397,31 @@ esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txr
 esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const canbus_mcp2515_transmit_options_t* options); 
 
 
-esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mcp2515_rxnbf_pins_config_t* config);
-esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf_pin_t rxnbf, uint32_t level);
+esp_err_t canbus_mcp2515_polling_receive(canbus_mcp2515_handle_t handle, can_frame_t* frame);
 
 
+
+/**
+ * @brief Get the number of transmit errors.
+ * @note This is the value of the TEC register.
+ * @param handle    Handle of the MCP2515 device
+ * @param count     Pointer to a memory location which receives the count
+ */
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count);
+
+/**
+ * @brief Get the number of receive errors.
+ * @note This is the value of the REC register.
+ * @param handle    Handle of the MCP2515 device
+ * @param count     Pointer to a memory location which receives the count
+ */
 esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle, uint8_t* count);
 
+/**
+ * @brief Get the error flags of the MCP2515 device.
+ * @param handle    Handle of the MCP2515 device
+ * @param flags     Pointer to a memory location which receives the flags
+ */
 esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, uint8_t* flags);
 
 

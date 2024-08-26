@@ -67,6 +67,10 @@ void app_main(void) {
     ESP_LOGI(TAG, "Reset MCP2515 after power on");
     ESP_ERROR_CHECK(canbus_mcp2515_reset(can_mcp2515_handle));
 
+    // Configure low pass fitler for wake-up
+    ESP_LOGI(TAG, "Configure MCP2515 Wake-up low pass filter");
+    ESP_ERROR_CHECK(canbus_mcp2515_configure_wakeup_lowpass_filter(can_mcp2515_handle, MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED));
+
     // Configure the MCP2515 CLKOUT pin
     mcp2515_clkout_sof_config_t clkoutSofConfig = {
         .mode = MCP2515_CLKOUT_PIN_OFF,

@@ -403,6 +403,22 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
     return err;
 }
 
+esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t handle, mcp2515_wakeup_lowpass_filter_t filter) {
+    // Handle must have been initialized, which means we have configured the SPI device
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    // TODO: Validate configuration
+
+    // MCP2515 needs to be in configuration mode to change CNF3
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
+
+    // Configure WAKFIL via CANCTRL[6]
+    uint8_t cnf3 = filter == MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED ? 0x40 : 0x00;
+    return mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, cnf3);
+}
+
 esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config) {
     // Options neeed to be specified
     if (config == NULL) {
@@ -460,7 +476,7 @@ esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txr
     if (txrts == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
-    
+
     uint8_t stagedTxrts;
     esp_err_t err = mcp2515_read_register(handle, MCP2515_TXRTSCTRL, &stagedTxrts);
     if (err == ESP_OK) {
@@ -530,17 +546,10 @@ esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf
     return mcp2515_modify_register(handle, MCP2515_BFPCTRL, bfpctrl, mask);
 }
 
-esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
-    return mcp2515_read_register(handle, MCP2515_TEC, count);
-}
 
-esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
-    return mcp2515_read_register(handle, MCP2515_REC, count);
-}
 
-esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, uint8_t* flags) {
-    return mcp2515_read_register(handle, MCP2515_EFLG, flags);
-}
+
+
 
 
 
@@ -695,6 +704,22 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     
     return err;
 }
+
+
+
+esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
+    return mcp2515_read_register(handle, MCP2515_TEC, count);
+}
+
+esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {
+    return mcp2515_read_register(handle, MCP2515_REC, count);
+}
+
+esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, uint8_t* flags) {
+    return mcp2515_read_register(handle, MCP2515_EFLG, flags);
+}
+
+
 
 
 esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data) {

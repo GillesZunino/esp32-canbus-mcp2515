@@ -42,8 +42,7 @@ esp_err_t canbus_mcp2515_init(const mcp2515_config_t* config, canbus_mcp2515_han
         .address_bits = 0,
         .dummy_bits = 0,
 
-        // We prefer mode = 0 [(0,0)] because it avoids one known issue with the MCP2515 - See https://ww1.microchip.com/downloads/en/DeviceDoc/80000179H.pdf
-        .mode = 0,
+        .mode = config->spi_cfg.mode,
 
         .clock_source = config->spi_cfg.clock_source,
         .clock_speed_hz = config->spi_cfg.clock_speed_hz,

@@ -409,7 +409,10 @@ esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t
         return ESP_ERR_INVALID_STATE;
     }
 
-    // TODO: Validate configuration
+    // Validate configuration
+    if ((filter != MCP2515_WAKEUP_LOWPASS_FILTER_DISABLED) && (filter != MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED)) {
+        return ESP_ERR_INVALID_ARG;
+    }
 
     // MCP2515 needs to be in configuration mode to change CNF3
     ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);

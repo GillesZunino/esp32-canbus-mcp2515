@@ -689,25 +689,19 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
 
     // Take exclusive access of the SPI bus while loading transmit buffers
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
-
-        // Configure TXnIE via CANINTE
-        // TODO: configure only once - we should not be reconfiguring interrupts for each frame
-        esp_err_t err = mcp2515_write_register(handle, MCP2515_CANINTE, 0);
+        // TODO: Load with more performant methods to reduce SPI size
+        // TODO: For extended frames, we can load all registers with a single auto incrementing 'WRITE' instruction
+        esp_err_t err = mcp2515_write_registers(handle, controlRegister, transmitBuffer, cmdCount);
         if (err == ESP_OK) {
-            // TODO: Load with more performant methods to reduce SPI size
-            // TODO: For extended frames, we can load all registers with a single auto incrementing 'WRITE' instruction
-            err = mcp2515_write_registers(handle, controlRegister, transmitBuffer, cmdCount);
-            if (err == ESP_OK) {
-                if (frame->dlc > 0) {
-                    err = mcp2515_write_registers(handle, dataRegister, &transmitBuffer[cmdCount], frame->dlc);
-                }
-                
-                // Send RTS to start frame transmission, if RTS send is allowed
-                if (!options->disable_rts) {
-                    if (err == ESP_OK) {
-                        // Send RTS to transmit the frame
-                        err = mcp2515_send_single_byte_instruction(handle, rtsInstruction);
-                    }
+            if (frame->dlc > 0) {
+                err = mcp2515_write_registers(handle, dataRegister, &transmitBuffer[cmdCount], frame->dlc);
+            }
+            
+            // Send RTS to start frame transmission, if RTS send is allowed
+            if (!options->disable_rts) {
+                if (err == ESP_OK) {
+                    // Send RTS to transmit the frame
+                    err = mcp2515_send_single_byte_instruction(handle, rtsInstruction);
                 }
             }
         }

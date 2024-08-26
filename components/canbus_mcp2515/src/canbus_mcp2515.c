@@ -119,26 +119,40 @@ esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, co
 
     // TODO: Check interrupt configuration
 
+
     esp_err_t ret = ESP_OK;
 
-    // Configure the GPIO pin to listen to the MCP2515 interrupt signal
-    gpio_config_t gpioConfig = {
-        .pin_bit_mask = 1ULL << config->intr_io_num,
-        .mode = GPIO_MODE_INPUT, 
-        .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type = GPIO_INTR_NEGEDGE
-    };
-    ESP_GOTO_ON_ERROR(gpio_config(&gpioConfig), cleanup, CanBusMCP2515LogTag, "%s() Failed to configure GPIO pin %d", __func__, config->intr_io_num);
+    // If interrupts were configured before, undo these configurations first - MCP2515 starts with interrupts disabled by default
+    if (handle->interrupt_config.flags != MCP2515_INTERRUPT_DISABLED) {
+        // Reset GPIO pin
+        ret = gpio_reset_pin(handle->interrupt_config.intr_io_num);
 
-    // Attach the interrupt handler to the GPIO pin
-    // TODO: Chosoe the right interrupt attachmecanism
-    //ESP_GOTO_ON_ERROR
-    //gpio_isr_register(gpio_num_t gpio_num, gpio_isr_t isr_handler, void *args, int intr_alloc_flags, esp_err_t *err);
-    //OR
-    //gpio_install_isr_service() and gpio_isr_handler_add() 
-    // TODO: Interrupt allocation - https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32/api-reference/system/intr_alloc.html
+        // TODO: Detach handler
+    }
 
+    // Clear configuration
+    memset(&handle->interrupt_config, 0, sizeof(handle->interrupt_config));
+
+    // Apply new interrupts configuration
+    if (config->flags != MCP2515_INTERRUPT_DISABLED) {
+        // Configure the GPIO pin to listen to the MCP2515 interrupt signal
+        gpio_config_t gpioConfig = {
+            .pin_bit_mask = 1ULL << config->intr_io_num,
+            .mode = GPIO_MODE_INPUT, 
+            .pull_up_en = GPIO_PULLUP_DISABLE,
+            .pull_down_en = GPIO_PULLDOWN_DISABLE,
+            .intr_type = GPIO_INTR_NEGEDGE
+        };
+        ESP_GOTO_ON_ERROR(gpio_config(&gpioConfig), cleanup, CanBusMCP2515LogTag, "%s() Failed to configure GPIO pin %d", __func__, config->intr_io_num);
+
+        // Attach the interrupt handler to the GPIO pin
+        // TODO: Chosoe the right interrupt attachmecanism
+        //ESP_GOTO_ON_ERROR
+        //gpio_isr_register(gpio_num_t gpio_num, gpio_isr_t isr_handler, void *args, int intr_alloc_flags, esp_err_t *err);
+        //OR
+        //gpio_install_isr_service() and gpio_isr_handler_add() 
+        // TODO: Interrupt allocation - https://docs.espressif.com/projects/esp-idf/en/v5.3/esp32/api-reference/system/intr_alloc.html
+    }
 
     // Configure the desired interrupts via CANINTE[7:0]
     uint8_t caninte = config->flags;

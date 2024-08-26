@@ -49,12 +49,12 @@ void app_main(void) {
     mcp2515_config_t mcp2515InitConfig = {
         .spi_cfg = {
             .host_id = SPI_HOSTID,
+
+            // NOTE: Prefer mode = 0 [(0,0)] because it avoids one known issue with the MCP2515 - See https://ww1.microchip.com/downloads/en/DeviceDoc/80000179H.pdf
             .mode = 0,
+
             .clock_source = SPI_CLK_SRC_DEFAULT,
             .clock_speed_hz = 10 * 1000000,
-
-             // NOTE: Prefer mode = 0 [(0,0)] because it avoids one known issue with the MCP2515 - See https://ww1.microchip.com/downloads/en/DeviceDoc/80000179H.pdf
-            .mode = 0,
 
             // NOTE: This may need adjustment when using GPIO Matrix routing
             //.input_delay_ns = 50,

@@ -177,9 +177,9 @@ typedef enum {
 
 
 typedef enum {
-    MCP2515_TRANSMIT_ALLOWED = 0,
-    MCP2515_TRANSMIT_ABORT = 1
-} mcp2515_transmit_t;
+    MCP2515_TRANSMIT_BEHAVIOR_NORMAL = 0,
+    MCP2515_TRANSMIT_BEHAVIOR_ABORT = 1
+} mcp2515_transmit_behavior_t;
 
 
 /**
@@ -408,7 +408,7 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
  * @brief Request the MCP2515 to abort all pending transmissions.
  * @param handle    Handle of the MCP2515 device
  */
-esp_err_t canbus_mcp2515_set_transmit_abort(canbus_mcp2515_handle_t handle, mcp2515_transmit_t mode);
+esp_err_t canbus_mcp2515_set_transmit_abort(canbus_mcp2515_handle_t handle, mcp2515_transmit_behavior_t mode);
 
 
 

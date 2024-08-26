@@ -708,13 +708,13 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     return err;
 }
 
-esp_err_t canbus_mcp2515_set_transmit_abort(canbus_mcp2515_handle_t handle, mcp2515_transmit_t mode) {
+esp_err_t canbus_mcp2515_set_transmit_abort(canbus_mcp2515_handle_t handle, mcp2515_transmit_behavior_t mode) {
     // validate configuration
-    if ((mode != MCP2515_TRANSMIT_ALLOWED) && (mode != MCP2515_TRANSMIT_ABORT)) {
+    if ((mode != MCP2515_TRANSMIT_BEHAVIOR_NORMAL) && (mode != MCP2515_TRANSMIT_BEHAVIOR_ABORT)) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    uint8_t canctrl = mode == MCP2515_TRANSMIT_ABORT ? 0x40 : 0x00;
+    uint8_t canctrl = mode == MCP2515_TRANSMIT_BEHAVIOR_ABORT ? 0x40 : 0x00;
     return mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x40); 
 }
 

@@ -232,6 +232,10 @@ void app_main(void) {
         ESP_ERROR_CHECK(canbus_mcp1515_get_error_flags(can_mcp2515_handle, &eflg));
         ESP_LOGI(TAG, "MCP2515 REC: %d - TEC: %d - EFLG: 0x%02X", receiveErrorCount, transmitErrorCount, eflg);
 
+        // Abort tranmissions for all TX buffers
+        // ESP_LOGI(TAG, "Configure MCP2515 interrupts");
+        // ESP_ERROR_CHECK(canbus_mcp2515_set_transmit_abort(can_mcp2515_handle, MCP2515_TRANSMIT_BEHAVIOR_ABORT));
+
         // Retrieve digital inputs state via TXnRTS pins
         uint8_t txnrts = 0;
         ESP_ERROR_CHECK(canbus_mcp2515_get_txnrts(can_mcp2515_handle, &txnrts));

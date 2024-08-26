@@ -870,6 +870,18 @@ esp_err_t mcp2515_send_single_byte_instruction(canbus_mcp2515_handle_t handle, c
         return ESP_ERR_INVALID_STATE;
     }
 
+    // Validate the instruction is single byte out, no data in
+    switch (instruction) {
+        case MCP2515_INSTRUCTION_RESET:
+        case MCP2515_INSTRUCTION_RTS_TX0:
+        case MCP2515_INSTRUCTION_RTS_TX1:
+        case MCP2515_INSTRUCTION_RTS_TX2:
+            break;
+
+        default:
+            return ESP_ERR_INVALID_ARG;
+    }
+
     //
     // One byte MCP2515 instruction
     //   * MOSI | <Instruction> |

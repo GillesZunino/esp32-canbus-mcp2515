@@ -402,7 +402,24 @@ esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mc
  */
 esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf_pin_t rxnbf, uint32_t level);
 
+/**
+ * @brief Set the MCP2515 receive buffer rxb0 in rollover behavior.
+ * @note When rollover is enabled, if RXB0 contains a valid message and another valid message is received, an overflow error
+ *       will not occur and the new message will be moved into RXB1, regardless of the acceptance criteria of RXB1.
+ * @param handle            Handle of the MCP2515 device
+ * @param enableRollover    true to enable rollover, false to disable
+ */
+esp_err_t canbus_mcp2515_set_receive_rollover(canbus_mcp2515_handle_t handle, bool enableRollover);
 
+/**
+ * @brief Set the MCP2515 'special receive' mode.
+ * @note Receive all messages, regardless of the values of the acceptance filters. If a message has an error before the
+ *       EOF, that portion of the message assembled in the MAB, before the error frame, will be loaded into the buffer.
+ *       Special receive mode is intended for debugging and is not used in normal operation.
+ * @param handle                  Handle of the MCP2515 device
+ * @param enableSpecialReceive    true to enable special receive mode, false to disable
+ */
+esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, bool enableSpecialReceive);
 
 /**
  * @brief Transmit an MCP2515 register.

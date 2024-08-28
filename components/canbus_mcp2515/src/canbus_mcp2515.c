@@ -547,12 +547,13 @@ esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf
     return mcp2515_modify_register(handle, MCP2515_BFPCTRL, bfpctrl, mask);
 }
 
+esp_err_t canbus_mcp2515_set_receive_rollover(canbus_mcp2515_handle_t handle, bool enableRollover) {
+    return mcp2515_modify_register(handle, MCP2515_RXB0CTRL, enableRollover ? 0x04 : 0x00, 0x04);
+}
 
-
-
-
-
-
+esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, bool enableSpecialReceive) {
+    return mcp2515_modify_register(handle, MCP2515_RXB0CTRL, enableSpecialReceive ? 0x60 : 0x00, 0x60);
+}
 
 
 inline static uint8_t internal_get_sid10_to_sid3(const uint32_t id) {

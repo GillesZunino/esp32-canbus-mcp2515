@@ -768,6 +768,32 @@ esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_re
     return err;
 }
 
+esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data, const uint8_t count) {
+    // Handle must have been initialized, which means we have configured the SPI device
+    if (handle->spi_device_handle == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    //
+    // Read Registers Instruction format:
+    //   * MOSI | 0xC0 | <Register Address> |
+    //   * MISO | N/A  | N/A                | <Data> | <Data> | ... | <Data> |
+    //
+    const uint8_t commandLengthInBytes = 2;
+    const uint8_t responseLengthInBytes = count;
+    const uint8_t transactionLengthInBytes = commandLengthInBytes + responseLengthInBytes;
+    spi_transaction_t spiTransaction = {
+        .flags = SPI_TRANS_USE_TXDATA,
+        .length = transactionLengthInBytes * 8,
+        .rxlength = responseLengthInBytes * 8,
+        .tx_data = { MCP2515_INSTRUCTION_READ, mcp2515Register },
+        .rx_buffer = data
+    };
+
+    return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
+}
+
+
 esp_err_t mcp2515_write_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data) {
     // Handle must have been initialized, which means we have configured the SPI device
     if (handle->spi_device_handle == NULL) {

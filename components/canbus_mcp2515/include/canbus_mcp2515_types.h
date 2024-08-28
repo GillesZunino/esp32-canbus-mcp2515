@@ -199,21 +199,20 @@ typedef enum {
 esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data);
 
 /**
+ * @brief Read multiple MCP2515 registers in sequence.
+ * @param handle          Handle of the MCP2515 device
+ * @param mcp2515Register Register to start reading
+ * @param data            Pointer to a memory location which receives the data
+ */
+esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data, const uint8_t count);
+
+/**
  * @brief Write to an MCP2515 register.
  * @param handle                Handle of the MCP2515 device
  * @param mcp2515RegisterStart  Register to write
  * @param data                  Data to write
  */
 esp_err_t mcp2515_write_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data);
-
-/**
- * @brief Change a set of bits in a MCP2515 register.
- * @param handle                Handle of the MCP2515 device
- * @param mcp2515RegisterStart  Register to alter
- * @param data                  Data to apply to the register
- * @param mask                 Number of bytes to read
- */
-esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data, const uint8_t mask);
 
 /**
  * @brief Write to multiple MCP2515 registers in sequence.
@@ -223,6 +222,15 @@ esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_
  * @param count                 Number of bytes to write
  */
 esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, const uint8_t data[], const uint8_t count);
+
+/**
+ * @brief Change a set of bits in a MCP2515 register.
+ * @param handle                Handle of the MCP2515 device
+ * @param mcp2515RegisterStart  Register to alter
+ * @param data                  Data to apply to the register
+ * @param mask                 Number of bytes to read
+ */
+esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data, const uint8_t mask);
 
 /**
  * @brief Send a one byte command to the MCP2515.

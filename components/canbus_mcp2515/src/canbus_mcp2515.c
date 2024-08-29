@@ -593,19 +593,19 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
         if (err == ESP_OK) {
             if ((txbnctrl & 0x08) == 0) {
                 // TXB0 is available
-                effectiveTXn = MCP2515_TXB0CTRL;
+                effectiveTXn = MCP2515_TXB0;
             } else {
                 err = mcp2515_read_register(handle, MCP2515_TXB1CTRL, &txbnctrl);
                 if (err == ESP_OK)  {
                     if ((txbnctrl & 0x08) == 0) {
                         // TXB1 is available
-                        effectiveTXn = MCP2515_TXB1CTRL;
+                        effectiveTXn = MCP2515_TXB1;
                     } else {
                         err = mcp2515_read_register(handle, MCP2515_TXB2CTRL, &txbnctrl);
                         if (err == ESP_OK) {
                              if ((txbnctrl & 0x08) == 0) {
                                 // TXB2 is available
-                                effectiveTXn = MCP2515_TXB2CTRL;
+                                effectiveTXn = MCP2515_TXB2;
                             } else {
                                 err = ESP_ERR_NOT_FOUND;
                             }

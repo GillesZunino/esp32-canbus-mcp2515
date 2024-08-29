@@ -843,7 +843,7 @@ esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_re
     return err;
 }
 
-esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data, const uint8_t count) {
+esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, uint8_t* data, const uint8_t count) {
     // Handle must have been initialized, which means we have configured the SPI device
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_STATE;
@@ -854,18 +854,31 @@ esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_r
     //   * MOSI | 0xC0 | <Register Address> |
     //   * MISO | N/A  | N/A                | <Data> | <Data> | ... | <Data> |
     //
+
+    // Prepare the command buffer with the provided payload
     const uint8_t commandLengthInBytes = 2;
-    const uint8_t responseLengthInBytes = count;
-    const uint8_t transactionLengthInBytes = commandLengthInBytes + responseLengthInBytes;
+    const size_t transactionLengthInBytes = commandLengthInBytes + count;
+
+    uint8_t commandBuffer[commandLengthInBytes];
+    commandBuffer[0] = MCP2515_INSTRUCTION_READ;
+    commandBuffer[1] = mcp2515RegisterStart;
+
+    uint8_t receiveBuffer[transactionLengthInBytes];
+
     spi_transaction_t spiTransaction = {
-        .flags = SPI_TRANS_USE_TXDATA,
+        .flags = 0,
         .length = transactionLengthInBytes * 8,
-        .rxlength = responseLengthInBytes * 8,
-        .tx_data = { MCP2515_INSTRUCTION_READ, mcp2515Register },
-        .rx_buffer = data
+        .rxlength = count * 8,
+        .tx_buffer = commandBuffer,
+        .rx_buffer = receiveBuffer
     };
 
-    return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
+    esp_err_t err = spi_device_transmit(handle->spi_device_handle, &spiTransaction);
+    if (err == ESP_OK) {
+       memcpy(data, &receiveBuffer[commandLengthInBytes], count);
+    }
+
+    return err;
 }
 
 
@@ -880,6 +893,7 @@ esp_err_t mcp2515_write_register(canbus_mcp2515_handle_t handle, const mcp2515_r
     //   * MOSI | 0x02 | <Register Address> |
     //   * MISO | N/A  | N/A                |
     //
+    
     const uint8_t transactionLengthInBytes = 3;
     spi_transaction_t spiTransaction = {
         .flags = SPI_TRANS_USE_TXDATA,
@@ -901,6 +915,11 @@ esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_
         return ESP_ERR_INVALID_STATE;
     }
 
+    //
+    // Write Register Instruction format:
+    //   * MOSI | 0x02 | <Register Address> | <Data> | <Data> | ... | <Data> |
+    //   * MISO | N/A  | N/A                | N/A    | N/A    | ... | N/A    |
+    //
 
     // Prepare the command buffer with the provided payload
     const size_t transactionLenInBytes = 2UL + count;
@@ -909,11 +928,6 @@ esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_
     writeBuffer[1] = mcp2515RegisterStart;
     memcpy(&writeBuffer[2], data, count);
 
-    //
-    // Write Register Instruction format:
-    //   * MOSI | 0x02 | <Register Address> | <Data> | <Data> | ... | <Data> |
-    //   * MISO | N/A  | N/A                | N/A    | N/A    | ... | N/A    |
-    //
     spi_transaction_t spiTransaction = {
         .flags = 0,
         .length = transactionLenInBytes * 8,

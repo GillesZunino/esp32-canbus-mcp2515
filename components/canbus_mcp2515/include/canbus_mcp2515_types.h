@@ -204,7 +204,7 @@ esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_re
  * @param mcp2515Register Register to start reading
  * @param data            Pointer to a memory location which receives the data
  */
-esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data, const uint8_t count);
+esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, uint8_t* data, const uint8_t count);
 
 /**
  * @brief Write to an MCP2515 register.

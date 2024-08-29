@@ -617,7 +617,6 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
         ESP_RETURN_ON_ERROR(err, CanBusMCP2515LogTag, "%s() Failed to choose a suitable TXBnCTRL register", __func__);
     } else {
         // Confirm the desired buffer is not pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
-        esp_err_t ret;
         uint8_t txbnctrl = 0;
         ESP_RETURN_ON_ERROR(mcp2515_read_register(handle, effectiveTXn, &txbnctrl), CanBusMCP2515LogTag, "%s() Failed to read TXBnCTRL register", __func__);
         if (txbnctrl & 0x08) {
@@ -657,10 +656,10 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     // Prepare the buffer to load the frame and transmit
     bool isExtendedFrame = frame->options & CAN_FRAME_OPTION_EXTENDED;
 
-    // Allocate a buffer large enough to contain the entire frame with data if present
+    // Assemble the SPI payload needed to transmit the frame - We use a larger than needed statically allocated array for performances
     //                     | TXB0CTRL | TXBnSIDH TXBnSIDL | TXBnDLC |   TXBnEID8 TXBnEID0   |
-    const uint8_t cmdCount =    1     +         2         +    1    + isExtendedFrame ? 2 : 0;
-    uint8_t transmitBuffer[cmdCount + frame->dlc];
+    const uint8_t cmdCount =    1     +         2         +    1    + (isExtendedFrame ? 2 : 0);
+    uint8_t transmitBuffer[6 + CAN_MAX_DLEN];
 
     // Set priority via TXP[1:0] (TXBnCTRL) - We leave TXREQ[3] (TXBnCTRL) set to false as we will send the RTS SPI command when all bufers have been loaded 
     transmitBuffer[0] = options->priority & 0x03;

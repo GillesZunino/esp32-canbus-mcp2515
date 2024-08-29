@@ -227,13 +227,14 @@ void app_main(void) {
 
             pCanFrame->data[0] = framesSent;
 
+            mcp2515_TXBn_t effectiveTransmitRegister = MCP2515_TXB_NONE;
             mcp2515_transmit_options_t sendOptions = {
                 .txb = MCP2515_TXB_AUTO,
                 .priority = MCP1515_TRANSMIT_PRIORITY_MEDIUM 
             };
 
             ESP_LOGI(TAG, "Sending frame with index %d", framesSent);
-            esp_err_t err = canbus_mcp2515_transmit(can_mcp2515_handle, pCanFrame, &sendOptions);
+            esp_err_t err = canbus_mcp2515_transmit(can_mcp2515_handle, pCanFrame, &sendOptions, &effectiveTransmitRegister);
             if (err != ESP_OK) {
                 ESP_LOGE(TAG, "Error sending frame with index %d: %d", framesSent, err);
             }

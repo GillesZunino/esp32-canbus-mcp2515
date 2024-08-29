@@ -255,10 +255,11 @@ typedef enum {
  * @brief MCP2515 Transmit registers.
  */
 typedef enum  {
+    MCP2515_TXB_NONE = -2,  ///< Do not use any transmit register
     MCP2515_TXB_AUTO = -1,  ///< Automatically select the first available register
-    MCP2515_TXB0 = 0,   ///< Use TXB0
-    MCP2515_TXB1 = 1,   ///< Use TXB1
-    MCP2515_TXB2 = 2    ///< Use TXB2
+    MCP2515_TXB0 = 0,       ///< Use TXB0
+    MCP2515_TXB1 = 1,       ///< Use TXB1
+    MCP2515_TXB2 = 2        ///< Use TXB2
 } mcp2515_TXBn_t;
 
 
@@ -465,8 +466,9 @@ esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, boo
  * @param handle    Handle of the MCP2515 device
  * @param frame     Frame to transmit
  * @param options   Transmit options
+ * @param effectiveTXB  Transmit register actually used (when using MCP2515_TXB_AUTO)
  */
-esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const mcp2515_transmit_options_t* options); 
+esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const mcp2515_transmit_options_t* options, mcp2515_TXBn_t* effectiveTXB); 
 
 
 /**

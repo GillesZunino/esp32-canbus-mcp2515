@@ -575,13 +575,23 @@ inline static uint32_t internal_get_eid7_to_eid0(const uint32_t id) {
     return (id & CAN_EFF_MASK) & 0xFF;
 }
 
-esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const mcp2515_transmit_options_t* options) {
+
+
+esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const mcp2515_transmit_options_t* options, mcp2515_TXBn_t* effectiveTXB) {
     // TODO: Validate handle
     
     // Validate the frame
     ESP_RETURN_ON_ERROR(internal_check_can_frame(frame), CanBusMCP2515LogTag, "%s() Invalid CAN frame", __func__);
 
     // TODO: Validate options
+
+    // Validate effectiveTXB
+    if (effectiveTXB == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // Zero out outputs
+    *effectiveTXB = MCP2515_TXB_NONE;
 
     // When 'MCP2515_TXB_AUTO' is specified, select the transmit buffer to use
     mcp2515_TXBn_t effectiveTXn = options->txb;
@@ -707,6 +717,11 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
 
     // Release access to the SPI bus
     spi_device_release_bus(handle->spi_device_handle);
+
+    if (err == ESP_OK) {
+        // Return the TXBn register actually used to the caller
+        *effectiveTXB = effectiveTXn;
+    }
 
     return err;
 }

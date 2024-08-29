@@ -239,7 +239,7 @@ void app_main(void) {
             }
         }
 
-        // Retrieve transmit/ receive error count
+        // Retrieve transmit / receive error count
         uint8_t transmitErrorCount = 0;
         uint8_t receiveErrorCount = 0;
         uint8_t eflg = 0;

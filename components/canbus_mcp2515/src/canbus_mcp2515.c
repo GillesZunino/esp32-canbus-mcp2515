@@ -750,7 +750,7 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
     }
 
     // Buffer to retrieve RXBnCTRL RXBnSIDH RXBnSIDL RXBnEID8 RXBnEID0 RXBnDLC
-    uint8_t receiveRegistersCount = 6;
+    const uint8_t receiveRegistersCount = 6;
     uint8_t receiveRegisters[receiveRegistersCount];
 
     // Buffer to receive RXBnD0 .. RXBnD7
@@ -764,7 +764,7 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
         // Minimize the time during which the bus is help by doing minimal decoding / processing here
         esp_err_t err = mcp2515_read_registers(handle, controlRegister, receiveRegisters, receiveRegistersCount);
         if (err == ESP_OK) {
-            err = mcp2515_read_registers(handle, dataRegister, frameData, receiveRegisters[5] & 0x03);
+            err = mcp2515_read_registers(handle, dataRegister, frameData, receiveRegisters[5] & 0x0F);
         }
 
     // Release access to the SPI bus
@@ -789,7 +789,7 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
         }
 
         // Copy data to the caller's structure
-        frame->dlc = receiveRegisters[5] & 0x03;
+        frame->dlc = receiveRegisters[5] & 0x0F;
         memcpy(frame->data, frameData, frame->dlc);
 
         // TODO; Fill in filter hist structure

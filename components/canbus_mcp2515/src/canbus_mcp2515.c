@@ -788,11 +788,25 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
             frame->id = (((uint32_t) receiveRegisters[1]) << 3) | ((((uint32_t) receiveRegisters[2]) & 0xE0) >> 5);
         }
 
-        // Copy data to the caller's structure
+        // Populate frame data
         frame->dlc = receiveRegisters[5] & 0x0F;
         memcpy(frame->data, frameData, frame->dlc);
 
-        // TODO; Fill in filter hist structure
+        // Populate filters hit
+        switch (controlRegister) {
+            case MCP2515_RXB0CTRL:
+                // RXB0 has two receive filters RXF0 and RXF1
+                filtersHit->flags = (receiveRegisters[0] & 0x01);
+                break;
+
+            case MCP2515_RXB1CTRL:
+                // RXB1 has four receive filters RXF2 to RXF5. In addition, when in rollover mode, RXF0 and RXF1 can also be hit
+                filtersHit->flags = (receiveRegisters[0] & 0x07);
+                break;
+
+            default:
+                break;
+        }
     }
 
     return err;

@@ -1,0 +1,4 @@
+[mapping:canbus_mcp2515]
+archive: libcanbus_mcp2515.a
+entries:
+    canbus_mcp2515_isr (noflash)     # All canbus_mcp2515_isr.c code/read-only data under IRAM/DRAM

@@ -200,14 +200,18 @@ void app_main(void) {
 
             // Alternate between standard and extended frames (filtered in or out)
             if (framesSent % 9 == 0) {
+                ESP_LOGI(TAG, "Preparing to send FILTERED IN EXTENDED frame");
                 pCanFrame = &filterdInExtendedFrame;
             } else {
                 if (framesSent % 3 == 0) {
+                    ESP_LOGI(TAG, "Preparing to send FILTERED OUT EXTENDED frame");
                     pCanFrame = &filterdOutExtendedFrame;
                 } else {
                     if (framesSent % 4 == 0) {
+                        ESP_LOGI(TAG, "Preparing to send FILTERED IN STANDARD frame");
                         pCanFrame = &filterdInStandardFrame;
                     } else {
+                        ESP_LOGI(TAG, "Preparing to send FILTERED OUT STANDARD frame");
                         pCanFrame = &filterdOutStandardFrame;
                     }
                 }

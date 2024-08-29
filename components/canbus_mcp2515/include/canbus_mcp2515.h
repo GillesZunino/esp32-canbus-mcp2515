@@ -275,6 +275,28 @@ typedef struct mcp2515_transmit_options {
 #define MCP2515_EFLAG_EWARN 0x01        ///< Error warning flag. Set when REC or TEC is greater or equal than 96
  
 
+typedef enum {
+    MCP2515_RECEIVE_RXB0 = 0,
+    MCP2515_RECEIVE_RXB1 = 1
+} mcp2515_receive_buffer_t;
+
+
+typedef union canintf {
+    struct {
+        uint8_t rx0if: 1;   ///< Receive buffer 0 full
+        uint8_t rx1if: 1;   ///< Receive buffer 1 full
+        uint8_t tx0if: 1;   ///< Transmit buffer 0 empty
+        uint8_t tx1if: 1;   ///< Transmit buffer 1 empty
+        uint8_t tx2if: 1;   ///< Transmit buffer 2 empty
+        uint8_t errif: 1;   ///< Error interrupt
+        uint8_t wakif: 1;   ///< Wake-up interrupt
+        uint8_t merrf: 1;   ///< Message error
+    }  __attribute__((packed)) bits;
+    uint8_t flags;
+}  __attribute__((packed)) canintf_t;
+
+
+
 /**
  * @brief Installs the MCP2515 driver and get its handle.
  *
@@ -439,7 +461,7 @@ esp_err_t canbus_mcp2515_set_transmit_abort(canbus_mcp2515_handle_t handle, mcp2
 
 
 
-esp_err_t canbus_mcp2515_polling_receive(canbus_mcp2515_handle_t handle, can_frame_t* frame);
+esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive_buffer_t receiveBuffer, can_frame_t* frame, mcp2515_receive_filter_hit_t* filtersHit);
 
 
 

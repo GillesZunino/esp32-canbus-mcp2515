@@ -239,6 +239,28 @@ void app_main(void) {
             }
         }
 
+        // If a receive register becomes available for reading, retrieve it now
+        canintf_t canintf;
+        ESP_ERROR_CHECK(canbus_mcp2515_get_interrupt_flags(can_mcp2515_handle, &canintf));
+        if (canintf.bits.rx0if || canintf.bits.rx1if) {
+            can_frame_t receivedFrameRxb0;
+            mcp2515_receive_filter_hit_t filtersHitRxb0;
+
+            can_frame_t receivedFrameRxb1;
+            mcp2515_receive_filter_hit_t filtersHitRxb1;
+
+            // TODO: Demonstrate how to read messages in order - Reading RXB0 then RXB1
+            if (canintf.bits.rx0if) {
+                ESP_ERROR_CHECK(canbus_mcp2515_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB0, &receivedFrameRxb0, &filtersHitRxb0));
+                ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_RX0_MSG_RECEIVED));
+            }
+            
+            if (canintf.bits.rx1if) {
+                ESP_ERROR_CHECK(canbus_mcp2515_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB1, &receivedFrameRxb1, &filtersHitRxb1));
+                ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_RX1_MSG_RECEIVED));            
+            }
+        }
+
         // Retrieve transmit / receive error count
         uint8_t transmitErrorCount = 0;
         uint8_t receiveErrorCount = 0;

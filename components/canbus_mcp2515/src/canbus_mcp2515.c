@@ -722,6 +722,83 @@ esp_err_t canbus_mcp2515_set_transmit_abort(canbus_mcp2515_handle_t handle, mcp2
     return mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x40); 
 }
 
+esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive_buffer_t receiveBuffer, can_frame_t* frame, mcp2515_receive_filter_hit_t* filtersHit) {
+    // TODO: Validate handle
+
+    // Basic validation of the frame
+    if (frame == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    // Clear return values to avoid confusion
+    memset(frame, 0, sizeof(can_frame_t));
+    memset(filtersHit, 0, sizeof(mcp2515_receive_filter_hit_t));
+
+    // Validate receive buffer to read
+    mcp2515_register_t controlRegister;
+    mcp2515_register_t dataRegister;
+    switch (receiveBuffer) {
+        case MCP2515_RECEIVE_RXB0:
+            controlRegister = MCP2515_RXB0CTRL;
+            dataRegister = MCP2515_RXB0DO;
+            break;
+        case MCP2515_RECEIVE_RXB1:
+            controlRegister = MCP2515_RXB1CTRL;
+            dataRegister = MCP2515_RXB1DO;
+            break;
+        default:
+            return ESP_ERR_INVALID_ARG;
+    }
+
+    // Buffer to retrieve RXBnCTRL RXBnSIDH RXBnSIDL RXBnEID8 RXBnEID0 RXBnDLC
+    uint8_t receiveRegistersCount = 6;
+    uint8_t receiveRegisters[receiveRegistersCount];
+
+    // Buffer to receive RXBnD0 .. RXBnD7
+    uint8_t frameData[CAN_MAX_DLC];
+
+    // Take exclusive access of the SPI bus while loading receive buffers
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
+        
+        // TODO: Consider reducing SPI data transferred and read only the registers we need. We currently read all reigsters even for standard frames
+        // Retrieve RXBnCTRL RXBnSIDH RXBnSIDL RXBnEID8 RXBnEID0 RXBnDLC and then RXBnD0 .. RXBnD7 if there is data
+        // Minimize the time during which the bus is help by doing minimal decoding / processing here
+        esp_err_t err = mcp2515_read_registers(handle, controlRegister, receiveRegisters, receiveRegistersCount);
+        if (err == ESP_OK) {
+            err = mcp2515_read_registers(handle, dataRegister, frameData, receiveRegisters[5] & 0x03);
+        }
+
+    // Release access to the SPI bus
+    spi_device_release_bus(handle->spi_device_handle);
+
+    // Fill out data structures if we successfully retrieved all the data we need
+    if (err == ESP_OK) {
+        bool isExtendedFrame = (receiveRegisters[2] & 0x08) != 0;
+        bool isRtr = receiveRegisters[0] & 0x08;
+
+        frame->options = (isRtr ? CAN_FRAME_OPTION_RTR : 0) | (isExtendedFrame ? CAN_FRAME_OPTION_EXTENDED : 0);
+
+        if (isExtendedFrame) {
+            // Extended frame ID from RXBnSIDH RXBnSIDL  
+            frame->id = (((uint32_t) receiveRegisters[1]) << 21) | 
+                        (((((uint32_t) receiveRegisters[2]) & 0xE0) >> 5) << 18) | ((((uint32_t) receiveRegisters[2]) & 0x03) << 16) | 
+                        //               RXBnEID8                                 RXBnEID0
+                        (((uint32_t) receiveRegisters[3]) << 8) | ((uint32_t) receiveRegisters[4]);
+        } else {
+            // Standard frame ID from RXBnSIDH RXBnSIDL
+            frame->id = (((uint32_t) receiveRegisters[1]) << 3) | ((((uint32_t) receiveRegisters[2]) & 0xE0) >> 5);
+        }
+
+        // Copy data to the caller's structure
+        frame->dlc = receiveRegisters[5] & 0x03;
+        memcpy(frame->data, frameData, frame->dlc);
+
+        // TODO; Fill in filter hist structure
+    }
+
+    return err;
+}
+
 
 
 esp_err_t canbus_mcp2515_get_transmit_error_count(canbus_mcp2515_handle_t handle, uint8_t* count) {

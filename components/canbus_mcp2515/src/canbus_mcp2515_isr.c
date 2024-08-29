@@ -2,5 +2,8 @@
 // Copyright 2024, Gilles Zunino
 // -----------------------------------------------------------------------------------
 
-void mcp2515_interrupt_handler() {
+#include <esp_attr.h>
+
+
+void IRAM_ATTR mcp2515_interrupt_handler() {
 }

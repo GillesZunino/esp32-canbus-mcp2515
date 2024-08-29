@@ -223,6 +223,22 @@ typedef struct mcp2515_receive_filter {
     } filter __attribute__((__packed__));
 } mcp2515_receive_filter_t;
 
+typedef union {
+    // struct {
+    //     uint8_t rxb0: 1;
+    //     uint8_t rxb1: 1;
+    //     uint8_t tx0: 1;
+    //     uint8_t tx1: 1;
+    //     uint8_t tx2: 1;
+    //     uint8_t err: 1;
+    //     uint8_t wak: 1;
+    //     uint8_t merrf: 1;
+    // } __attribute__((packed)) filters;
+    // uint8_t flags;
+
+    // TODO Implement this
+} mcp2515_receive_filter_hit_t;
+
 /**
  * @brief MCP2515 modes of operation.
  * @note On power on, the MCP2515 automatically enters configuration mode.

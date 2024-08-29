@@ -239,9 +239,29 @@ void app_main(void) {
             }
         }
 
-        // If a receive register becomes available for reading, retrieve it now
-        canintf_t canintf;
+        // Retrieve transmission status from MCP2515 
+            canintf_t canintf;
         ESP_ERROR_CHECK(canbus_mcp2515_get_interrupt_flags(can_mcp2515_handle, &canintf));
+
+        // If a transmit register becomes empty (sucessful transmission), clear its status
+        if (canintf.bits.tx0if || canintf.bits.tx1if || canintf.bits.tx2if) {
+            if (canintf.bits.tx0if) {
+                ESP_LOGI(TAG, "Clearing TX0IF in CANINTF");
+                ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_TX0_MSG_SENT));
+            }
+            
+            if (canintf.bits.tx1if) {
+                ESP_LOGI(TAG, "Clearing TX1IF in CANINTF");
+                ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_TX1_MSG_SENT));
+            }
+
+            if (canintf.bits.tx2if) {
+                ESP_LOGI(TAG, "Clearing TX2IF in CANINTF");
+                ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_TX2_MSG_SENT));
+            }
+        }
+
+        // If a receive register becomes available for reading, retrieve it now
         if (canintf.bits.rx0if || canintf.bits.rx1if) {
             can_frame_t receivedFrameRxb0;
             mcp2515_receive_filter_hit_t filtersHitRxb0;

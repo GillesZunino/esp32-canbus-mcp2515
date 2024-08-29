@@ -697,8 +697,8 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
             }
             
             // Send RTS to start frame transmission, if RTS send is allowed
-            if (!options->disable_rts) {
-                if (err == ESP_OK) {
+            if (err == ESP_OK) {
+                if (!options->disable_rts) {
                     // Send RTS to transmit the frame
                     err = mcp2515_send_single_byte_instruction(handle, rtsInstruction);
                 }
@@ -868,7 +868,7 @@ esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_r
     spi_transaction_t spiTransaction = {
         .flags = 0,
         .length = transactionLengthInBytes * 8,
-        .rxlength = count * 8,
+        .rxlength = transactionLengthInBytes * 8,
         .tx_buffer = commandBuffer,
         .rx_buffer = receiveBuffer
     };

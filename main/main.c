@@ -271,12 +271,18 @@ void app_main(void) {
 
             // TODO: Demonstrate how to read messages in order - Reading RXB0 then RXB1
             if (canintf.bits.rx0if) {
+                ESP_LOGI(TAG, "Reading frame from RXB0");
                 ESP_ERROR_CHECK(canbus_mcp2515_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB0, &receivedFrameRxb0, &filtersHitRxb0));
+
+                ESP_LOGI(TAG, "Clearing RX0IF in CANINTF");
                 ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_RX0_MSG_RECEIVED));
             }
             
             if (canintf.bits.rx1if) {
+                ESP_LOGI(TAG, "Reading frame from RXB1");
                 ESP_ERROR_CHECK(canbus_mcp2515_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB1, &receivedFrameRxb1, &filtersHitRxb1));
+
+                ESP_LOGI(TAG, "Clearing RX1IF in CANINTF");
                 ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_RX1_MSG_RECEIVED));            
             }
         }

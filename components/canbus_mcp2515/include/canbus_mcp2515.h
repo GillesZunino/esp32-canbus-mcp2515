@@ -335,7 +335,8 @@ esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle);
 
 
 esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_interrupt_config_t* config);
-esp_err_t canbus_mcp2515_get_interrupt_flags(canbus_mcp2515_handle_t handle, uint8_t* flags);
+
+esp_err_t canbus_mcp2515_get_interrupt_flags(canbus_mcp2515_handle_t handle, canintf_t* flags);
 esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, mcp2515_interrupts_t flags);
 
 

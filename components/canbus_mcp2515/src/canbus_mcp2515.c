@@ -590,19 +590,19 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
         uint8_t txbnctrl = 0;
         esp_err_t err = mcp2515_read_register(handle, MCP2515_TXB0CTRL, &txbnctrl);
         if (err == ESP_OK) {
-            if (txbnctrl & 0x08) {
+            if ((txbnctrl & 0x08) == 0) {
                 // TXB0 is available
                 effectiveTXn = MCP2515_TXB0;
             } else {
                 err = mcp2515_read_register(handle, MCP2515_TXB1CTRL, &txbnctrl);
                 if (err == ESP_OK)  {
-                    if (txbnctrl & 0x08) {
+                    if ((txbnctrl & 0x08) == 0) {
                         // TXB1 is available
                         effectiveTXn = MCP2515_TXB1;
                     } else {
                         err = mcp2515_read_register(handle, MCP2515_TXB2CTRL, &txbnctrl);
                         if (err == ESP_OK) {
-                             if (txbnctrl & 0x08) {
+                             if ((txbnctrl & 0x08) == 0) {
                                 // TXB2 is available
                                 effectiveTXn = MCP2515_TXB2;
                             } else {
@@ -613,12 +613,12 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
                 }
             }
         }
-        ESP_RETURN_ON_ERROR(err, CanBusMCP2515LogTag, "%s() Failed to choose a suitable TXBnCTRL register", __func__);
+        ESP_RETURN_ON_ERROR(err, CanBusMCP2515LogTag, "%s() Failed to choose a suitable TXBn register", __func__);
     } else {
         // Confirm the desired buffer is not pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
         uint8_t txbnctrl = 0;
         ESP_RETURN_ON_ERROR(mcp2515_read_register(handle, effectiveTXn, &txbnctrl), CanBusMCP2515LogTag, "%s() Failed to read TXBnCTRL register", __func__);
-        if (txbnctrl & 0x08) {
+        if ((txbnctrl & 0x08) == 0) {
             return ESP_ERR_INVALID_STATE;
         }
     }

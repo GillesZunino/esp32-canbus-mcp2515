@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include <esp_check.h>
+#include <esp_attr.h>
 
 #include "canbus_mcp2515.h"
 #include "canbus_mcp2515_types.h"
@@ -347,8 +348,8 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
     }
 
     uint8_t count = 4;
-    uint8_t filterSpiBuffer[count];
-    uint8_t maskSpiBuffer[count];
+    WORD_ALIGNED_ATTR uint8_t filterSpiBuffer[count];
+    WORD_ALIGNED_ATTR uint8_t maskSpiBuffer[count];
 
     switch (filter->mode) {
         case MCP2515_FILTER_STANDARD_FRAME:
@@ -668,7 +669,7 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     // Assemble the SPI payload needed to transmit the frame - We use a larger than needed statically allocated array for performances
     //                     | TXB0CTRL | TXBnSIDH TXBnSIDL | TXBnDLC |   TXBnEID8 TXBnEID0   |
     const uint8_t cmdCount =    1     +         2         +    1    + (isExtendedFrame ? 2 : 0);
-    uint8_t transmitBuffer[6 + CAN_MAX_DLEN];
+    WORD_ALIGNED_ATTR uint8_t transmitBuffer[6 + CAN_MAX_DLEN];
 
     // Set priority via TXP[1:0] (TXBnCTRL) - We leave TXREQ[3] (TXBnCTRL) set to false as we will send the RTS SPI command when all bufers have been loaded 
     transmitBuffer[0] = options->priority & 0x03;
@@ -766,10 +767,10 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
 
     // Buffer to retrieve RXBnCTRL RXBnSIDH RXBnSIDL RXBnEID8 RXBnEID0 RXBnDLC
     const uint8_t receiveRegistersCount = 6;
-    uint8_t receiveRegisters[receiveRegistersCount];
+    WORD_ALIGNED_ATTR uint8_t receiveRegisters[receiveRegistersCount];
 
     // Buffer to receive RXBnD0 .. RXBnD7
-    uint8_t frameData[CAN_MAX_DLC];
+    WORD_ALIGNED_ATTR uint8_t frameData[CAN_MAX_DLC];
 
     // Take exclusive access of the SPI bus while loading receive buffers
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
@@ -888,7 +889,7 @@ esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_r
     const uint8_t commandLengthInBytes = 2;
     const size_t transactionLengthInBytes = commandLengthInBytes + count;
 
-    uint8_t commandBuffer[commandLengthInBytes];
+    WORD_ALIGNED_ATTR uint8_t commandBuffer[commandLengthInBytes];
     commandBuffer[0] = MCP2515_INSTRUCTION_READ;
     commandBuffer[1] = mcp2515RegisterStart;
 
@@ -952,7 +953,7 @@ esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_
 
     // Prepare the command buffer with the provided payload
     const size_t transactionLenInBytes = 2UL + count;
-    uint8_t writeBuffer[transactionLenInBytes];
+    WORD_ALIGNED_ATTR uint8_t writeBuffer[transactionLenInBytes];
     writeBuffer[0] = MCP2515_INSTRUCTION_WRITE;
     writeBuffer[1] = mcp2515RegisterStart;
     memcpy(&writeBuffer[2], data, count);

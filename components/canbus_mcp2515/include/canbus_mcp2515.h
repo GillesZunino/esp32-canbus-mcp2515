@@ -224,20 +224,17 @@ typedef struct mcp2515_receive_filter {
 } mcp2515_receive_filter_t;
 
 typedef union {
-    // struct {
-    //     uint8_t rxb0: 1;
-    //     uint8_t rxb1: 1;
-    //     uint8_t tx0: 1;
-    //     uint8_t tx1: 1;
-    //     uint8_t tx2: 1;
-    //     uint8_t err: 1;
-    //     uint8_t wak: 1;
-    //     uint8_t merrf: 1;
-    // } __attribute__((packed)) filters;
-    // uint8_t flags;
-
-    // TODO Implement this
-} mcp2515_receive_filter_hit_t;
+    struct {
+        uint8_t rxf0: 1;
+        uint8_t rxf1: 1;
+        uint8_t rxf2: 1;
+        uint8_t rxf3: 1;
+        uint8_t rxf4: 1;
+        uint8_t rxf5: 1;
+        uint8_t reserved: 2;
+    } __attribute__((packed)) filters;
+    uint8_t flags;
+} __attribute__((packed)) mcp2515_receive_filter_hit_t;
 
 /**
  * @brief MCP2515 modes of operation.

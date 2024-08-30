@@ -183,11 +183,6 @@ esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, m
         return ESP_ERR_INVALID_STATE;
     }
 
-    // Interrupts must have been configured to reset them
-    if (handle->interrupt_config.flags == MCP2515_INTERRUPT_DISABLED) {
-        return ESP_ERR_INVALID_STATE;
-    }
-
     // Reset interrupt flags via CANINTF[7:0]
     return mcp2515_modify_register(handle, MCP2515_CANINTF, 0, flags);
 }

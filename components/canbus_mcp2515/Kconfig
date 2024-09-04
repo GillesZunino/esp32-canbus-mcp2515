@@ -1,0 +1,11 @@
+# -----------------------------------------------------------------------------------
+# Copyright 2024, Gilles Zunino
+# -----------------------------------------------------------------------------------
+
+menu "MCP2515 CAN BUS Drivers"
+    config MCP2515_SANITIZER
+        bool "Enable GCC sanitizers for MCP2515 driver"
+        default "n"
+        help
+            Select this option to enable GCC sanitizers ("-fsanitize=undefined -fno-sanitize=shift-base") on the MCAP2515 driver. Enabling GCC sanitizer can make the code much larger and should not be enabled in production builds.
+endmenu

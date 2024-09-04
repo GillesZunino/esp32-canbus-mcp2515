@@ -8,5 +8,8 @@ idf_component_register(SRCS ${srcs}
                        LDFRAGMENTS "canbus_mcp2515.lf"
                        REQUIRES "driver esp_driver_gpio")
 
-idf_component_get_property(lib canbus_mcp2515 COMPONENT_LIB)
-target_compile_options(${lib} PRIVATE "-fsanitize=undefined" "-fno-sanitize=shift-base")
+
+if(CONFIG_CANBUS_MCP2515_SANITIZER)
+    idf_component_get_property(lib canbus_mcp2515 COMPONENT_LIB)
+    target_compile_options(${lib} PRIVATE "-fsanitize=undefined" "-fno-sanitize=shift-base")
+endif()

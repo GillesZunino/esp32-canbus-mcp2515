@@ -2,7 +2,7 @@
 # Copyright 2024, Gilles Zunino
 # -----------------------------------------------------------------------------------
 
-menu "MCP2515 CAN BUS Drivers"
+menu "MCP2515 Driver"
     config MCP2515_SANITIZER
         bool "Enable GCC sanitizers for MCP2515 driver"
         default "n"

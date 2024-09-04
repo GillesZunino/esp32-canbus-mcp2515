@@ -552,7 +552,7 @@ esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, boo
 
 
 inline static uint8_t internal_get_sid10_to_sid3(const uint32_t id) {
-    return ((id & CAN_SFF_MASK) >> 3) & 0xFF;
+    return ((id &0x1F000000) >> 21) | ((id & 0xE00000) >> 21);
 }
 
 inline static uint8_t internal_get_sid2_to_sid0(const uint32_t id) {

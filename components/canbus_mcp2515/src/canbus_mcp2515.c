@@ -145,7 +145,7 @@ esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, co
         ESP_GOTO_ON_ERROR(gpio_config(&gpioConfig), cleanup, CanBusMCP2515LogTag, "%s() Failed to configure GPIO pin %d", __func__, config->intr_io_num);
 
         // Attach the interrupt handler to the GPIO pin
-        // TODO: Chosoe the right interrupt attachmecanism
+        // TODO: Choose the right interrupt attachmecanism
         //ESP_GOTO_ON_ERROR
         //gpio_isr_register(gpio_num_t gpio_num, gpio_isr_t isr_handler, void *args, int intr_alloc_flags, esp_err_t *err);
         //OR
@@ -275,7 +275,9 @@ esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const
         cnf3 |= (bitTimingConfig->phase_seg2 & 0x07);
     }
 
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
     ESP_LOGI(CanBusMCP2515LogTag, "Configuring MCP2515 bit timing with CNF1: 0x%02X, CNF2: 0x%02X, CNF3[5:0]: 0x%02X", cnf1, cnf2, cnf3);
+#endif
     
     // Take exclusive access of the SPI bus during configuration
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
@@ -377,8 +379,10 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
             return ESP_ERR_INVALID_ARG;
     }
 
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
     // TODO: Log filter prefix and maskprefix correctly
     ESP_LOGI(CanBusMCP2515LogTag, "Configuring MCP2515 filter RXFnSIDH: 0x%02X, RXFnSIDL: 0x%02X, RXFnSEID8: 0x%02X, RXFnSEID0: 0x%02X | RXMnSIDH: 0x%02X, RXMnSIDL: 0x%02X, RXMnEID8: 0x%02X, RXMnEID0: 0x%02X", filterSpiBuffer[0], filterSpiBuffer[1], filterSpiBuffer[2], filterSpiBuffer[3], maskSpiBuffer[0], maskSpiBuffer[1], maskSpiBuffer[2], maskSpiBuffer[3]);
+#endif
 
     // Take exclusive access of the SPI bus during configuration
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
@@ -689,8 +693,11 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
         memcpy(&transmitBuffer[cmdCount], frame->data, frame->dlc);
     }
 
+   
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
     // Log the prepared buffer for debugging
     ESP_LOG_BUFFER_HEXDUMP(CanBusMCP2515LogTag, transmitBuffer, cmdCount + frame->dlc, ESP_LOG_INFO);
+#endif
 
     // Take exclusive access of the SPI bus while loading transmit buffers
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);

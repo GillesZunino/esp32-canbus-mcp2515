@@ -3,6 +3,21 @@
 # -----------------------------------------------------------------------------------
 
 menu "MCP2515 Driver"
+    config MCP2515_ISR_IN_IRAM
+        bool "Place MCP2515 ISR function into IRAM"
+        default n
+        help
+            Place the MCP2515 ISR in to IRAM. This will allow the ISR to avoid
+            cache misses, and also be able to run whilst the cache is disabled
+            (such as when writing to SPI Flash).
+
+    config MCP2515_ENABLE_DEBUG_LOG
+        bool "Enable MCP2515 debug log"
+        default n
+        help
+            whether to enable the debug log message for the CP2515 driver.
+            Note that this option only controls the MCP2515 driver logs.
+
     config MCP2515_SANITIZER
         bool "Enable GCC sanitizers for MCP2515 driver"
         default "n"

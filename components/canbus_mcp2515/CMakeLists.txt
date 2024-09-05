@@ -1,6 +1,7 @@
 set(srcs
     "src/canbus_mcp2515.c"
     "src/canbus_mcp2515_isr.c"
+    "src/canbus_mcp2515_utils.c"
 )
 
 idf_component_register(SRCS ${srcs}

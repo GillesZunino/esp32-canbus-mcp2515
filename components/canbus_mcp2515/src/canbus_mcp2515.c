@@ -7,8 +7,9 @@
 #include <esp_check.h>
 #include <esp_attr.h>
 
-#include "canbus_mcp2515.h"
+#include "canbus_mcp2515_utils.h"
 #include "canbus_mcp2515_types.h"
+#include "canbus_mcp2515.h"
 
 
 #ifdef CONFIG_MCP2515_ISR_IN_IRAM
@@ -232,7 +233,11 @@ esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_
             uint8_t opMd = canStat >> 5;
             bool currentModeMatchesDesired = opMd == mode;
             if (!currentModeMatchesDesired) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+                ESP_LOGE(CanBusMCP2515LogTag, "%s() Failed to set MCP2515 mode to '%s', current mode is '%s'", __func__, dump_mcp2515_mode(mode), dump_mcp2515_mode(opMd));
+#else
                 ESP_LOGE(CanBusMCP2515LogTag, "%s() Failed to set MCP2515 mode to %d, current mode is %d", __func__, mode, opMd);
+#endif
             }
             return currentModeMatchesDesired ? ESP_OK : ESP_FAIL;
         }
@@ -1087,6 +1092,9 @@ static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp25
     mcp2515_mode_t mode;
     esp_err_t err = canbus_mcp2515_get_mode(handle, &mode);
     if (err == ESP_OK) {
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGI(CanBusMCP2515LogTag, "%s() MCP2515 current mode '%s", __func__, dump_mcp2515_mode(mode));
+#endif
         return mode == MCP2515_MODE_CONFIG ? ESP_OK : ESP_ERR_NOT_ALLOWED;
     }
 

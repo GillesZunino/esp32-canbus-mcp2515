@@ -154,7 +154,7 @@ typedef struct mcp2515_txnrts_pins_config {
 /**
  * @brief MCP2515 Wake-up low pass filter configuration.
  */
-typedef enum mcp2515_wakeup_filter {
+typedef enum {
     MCP2515_WAKEUP_LOWPASS_FILTER_DISABLED = 0,    ///< Wakeup low pass filter disabled
     MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED = 1      ///< Wakeup low pass filter enabled
 } mcp2515_wakeup_lowpass_filter_t;
@@ -264,7 +264,7 @@ typedef enum {
     MCP1515_TRANSMIT_PRIORITY_LOW = 0,
     MCP1515_TRANSMIT_PRIORITY_MEDIUM = 1,
     MCP1515_TRANSMIT_PRIORITY_HIGH = 2,
-    MCP1515_TRANSMIT_PRIORITY_HIGHEST =3
+    MCP1515_TRANSMIT_PRIORITY_HIGHEST = 3
 } mcp2515_transmit_priority_t;
 
 /**

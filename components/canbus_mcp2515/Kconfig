@@ -19,7 +19,7 @@ menu "MCP2515 Driver"
             Note that this option only controls the MCP2515 driver logs.
 
     config MCP2515_SANITIZER
-        bool "Enable GCC sanitizers for MCP2515 driver"
+        bool "Enable GCC sanitizers"
         default n
         help
             Select this option to enable GCC sanitizers ("-fsanitize=undefined -fno-sanitize=shift-base") on the MCAP2515 driver. Enabling GCC sanitizer can make the code much larger and should not be enabled in production builds.

@@ -555,23 +555,32 @@ esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, boo
 }
 
 
-inline static uint8_t internal_get_sid10_to_sid3(const uint32_t id) {
+
+FORCE_INLINE_ATTR uint8_t internal_get_sid10_to_sid3_from_standard_id(const uint32_t id) {
+    return ((id & CAN_SFF_MASK) >> 3) & 0xFF;
+}
+
+FORCE_INLINE_ATTR uint8_t internal_get_sid10_to_sid3_from_extended_id(const uint32_t id) {
     return ((id &0x1F000000) >> 21) | ((id & 0xE00000) >> 21);
 }
 
-inline static uint8_t internal_get_sid2_to_sid0(const uint32_t id) {
+FORCE_INLINE_ATTR uint8_t internal_get_sid2_to_sid0_from_standard_id(const uint32_t id) {
     return (id & CAN_SFF_MASK) & 0x07;
 }
 
-inline static uint32_t internal_get_eid17_to_eid16(const uint32_t id) {
+FORCE_INLINE_ATTR uint8_t internal_get_sid2_to_sid0_from_extended_id(const uint32_t id) {
+    return (id & 0x1C0000) >> 18;
+}
+
+FORCE_INLINE_ATTR uint32_t internal_get_eid17_to_eid16(const uint32_t id) {
     return ((id & CAN_EFF_MASK) >> 16) & 0x03;
 }
 
-inline static uint32_t internal_get_eid15_to_eid8(const uint32_t id) {
+FORCE_INLINE_ATTR uint32_t internal_get_eid15_to_eid8(const uint32_t id) {
     return ((id & CAN_EFF_MASK) >> 8) & 0xFF;
 }
 
-inline static uint32_t internal_get_eid7_to_eid0(const uint32_t id) {
+FORCE_INLINE_ATTR uint32_t internal_get_eid7_to_eid0(const uint32_t id) {
     return (id & CAN_EFF_MASK) & 0xFF;
 }
 
@@ -674,8 +683,8 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     transmitBuffer[0] = options->priority & 0x03;
 
     // Prepare Standard ID - TXBnSIDH and TXBnSIDL
-    transmitBuffer[1] = internal_get_sid10_to_sid3(frame->id);
-    transmitBuffer[2] = internal_get_sid2_to_sid0(frame->id) << 5 | (isExtendedFrame ? (0x08 | internal_get_eid17_to_eid16(frame->id)) : 0);
+    transmitBuffer[1] = isExtendedFrame ? internal_get_sid10_to_sid3_from_extended_id(frame->id) : internal_get_sid10_to_sid3_from_standard_id(frame->id);
+    transmitBuffer[2] = isExtendedFrame ? (internal_get_sid2_to_sid0_from_extended_id(frame->id) << 5) | (0x08 | internal_get_eid17_to_eid16(frame->id)) : (internal_get_sid2_to_sid0_from_standard_id(frame->id) << 5);
 
     // Prepare Extended ID configuration
     if (isExtendedFrame) {

@@ -10,6 +10,14 @@
 #include "canbus_mcp2515.h"
 #include "canbus_mcp2515_types.h"
 
+
+#ifdef CONFIG_MCP2515_ISR_IN_IRAM
+#define MCP2515_MALLOC_CAPS    (MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)
+#else
+#define MCP2515_MALLOC_CAPS    MALLOC_CAP_DEFAULT
+#endif
+
+
 static const char* CanBusMCP2515LogTag = "canbus-mcp2515";
 
 typedef struct canbus_mcp2515 {
@@ -32,7 +40,7 @@ esp_err_t canbus_mcp2515_init(const mcp2515_config_t* config, canbus_mcp2515_han
     ESP_RETURN_ON_ERROR(internal_check_mcp2515_config(config), CanBusMCP2515LogTag, "%s() Invalid configuration", __func__);
 
     // Allocate space for our handle
-    canbus_mcp2515_t* pMcp2515 = calloc(1, sizeof(canbus_mcp2515_t));
+    canbus_mcp2515_t* pMcp2515 = heap_caps_calloc(1, sizeof(canbus_mcp2515_t), MCP2515_MALLOC_CAPS);
     if (pMcp2515 == NULL) {
         return ESP_ERR_NO_MEM;
     }
@@ -64,7 +72,7 @@ esp_err_t canbus_mcp2515_init(const mcp2515_config_t* config, canbus_mcp2515_han
 
 cleanup:
     if (pMcp2515 != NULL) {
-        free(pMcp2515);
+        heap_caps_free(pMcp2515);
     }
 
     return ret;
@@ -77,6 +85,8 @@ esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
     
     // Track the first error we encounter so we can return it to the caller
     esp_err_t firstError = ESP_OK;
+
+    // TODO: Detach interrupts
 
     // Reset the MCP2515 before shutting the driver down
     esp_err_t err = canbus_mcp2515_reset(handle);
@@ -93,7 +103,7 @@ esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
     }
 
     // Release memory
-    free(handle);
+    heap_caps_free(handle);
     
     return firstError;
 }

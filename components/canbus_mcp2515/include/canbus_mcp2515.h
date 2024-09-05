@@ -294,7 +294,7 @@ typedef enum {
     MCP2515_RECEIVE_RXB1 = 1
 } mcp2515_receive_buffer_t;
 
-typedef union canintf {
+typedef union {
     struct {
         uint8_t rx0if: 1;   ///< Receive buffer 0 full
         uint8_t rx1if: 1;   ///< Receive buffer 1 full
@@ -308,16 +308,16 @@ typedef union canintf {
     uint8_t flags;
 } __attribute__((packed)) canintf_t;
 
-typedef union eflg {
+typedef union {
     struct {
-        uint8_t rx1ovr: 1;  ///< Receive buffer 1 overflow
-        uint8_t rx0ovr: 1;  ///< Receive buffer 0 overflow
-        uint8_t txboff: 1;  ///< Transmit bus off
-        uint8_t txep: 1;    ///< Transmit error-passive
-        uint8_t rxep: 1;    ///< Receive error-passive
-        uint8_t txwarn: 1;  ///< Transmit error warning
-        uint8_t rxwarn: 1;  ///< Receive error warning
         uint8_t ewarn: 1;   ///< Error warning
+        uint8_t rxwarn: 1;  ///< Receive error warning
+        uint8_t txwarn: 1;  ///< Transmit error warning
+        uint8_t rxep: 1;    ///< Receive error-passive
+        uint8_t txep: 1;    ///< Transmit error-passive
+        uint8_t txbo: 1;  ///< Transmit bus off
+        uint8_t rx0ovr: 1;  ///< Receive buffer 0 overflow
+        uint8_t rx1ovr: 1;  ///< Receive buffer 1 overflow
     }  __attribute__((packed)) bits;
     uint8_t flags;
 } __attribute__((packed)) eflg_t;

@@ -165,6 +165,15 @@ const char* dump_receive_buffer(mcp2515_receive_buffer_t buffer) {
     }
 }
 
+const char* dump_frame_options(can_frame_options_t options) {
+    switch (options) {
+        CASE_RETURN_STR(CAN_FRAME_OPTION_RTR)
+        CASE_RETURN_STR(CAN_FRAME_OPTION_EXTENDED)
+    default:
+        return "Unknown can_frame_options_t";
+    }
+}
+
 void log_canintf_internal(const char *tag, uint8_t canintf, esp_log_level_t log_level) {
     ESP_LOG_LEVEL(log_level, tag, "|                  CANINTF: 0x%02X                  |", canintf);
     ESP_LOG_LEVEL(log_level, tag, "|MERRF|WAKIF|ERRIF|TX2IF|TX1IF|TX0IF|RX1IF|RX0IF|");

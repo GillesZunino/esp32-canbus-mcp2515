@@ -84,6 +84,8 @@ const char* dump_mcp2515_mode(mcp2515_mode_t mode);
 const char* dump_transmit_priority(mcp2515_transmit_priority_t priority);
 const char* dump_receive_buffer(mcp2515_receive_buffer_t buffer);
 
+const char* dump_frame_options(can_frame_options_t options);
+
 void log_canintf_internal(const char *tag, uint8_t canintf, esp_log_level_t log_level);
 void log_eflg_internal(const char *tag, uint8_t eflg, esp_log_level_t log_level);
 void log_canstat_internal(const char *tag, uint8_t canstat, esp_log_level_t log_level);

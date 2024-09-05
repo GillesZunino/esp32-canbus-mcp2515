@@ -20,7 +20,7 @@ extern "C" {
 #define MCP2515_LOG_CANINTF( tag, canintf, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
-            log_canintf_internal( tag, canintf.flags, level); \
+            log_canintf_internal( tag, canintf, level); \
         } \
     } while(0)
 
@@ -34,7 +34,7 @@ extern "C" {
 #define MCP2515_LOG_EFLG( tag, eflg, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
-            log_eflg_internal( tag, eflg.flags, level); \
+            log_eflg_internal( tag, eflg, level); \
         } \
     } while(0)
 

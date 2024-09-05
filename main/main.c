@@ -184,7 +184,7 @@ void app_main(void) {
     ESP_ERROR_CHECK(canbus_mcp2515_set_special_receive(can_mcp2515_handle, true));
 
     // Enable rollover mode
-    ESP_LOGI(TAG, "Configure MCP2515 receive roll over");
+    ESP_LOGI(TAG, "Configure MCP2515 receive rollover");
     ESP_ERROR_CHECK(canbus_mcp2515_set_receive_rollover(can_mcp2515_handle, true));
 
     // Set the MCP2515 in loopback mode for testing with one node only
@@ -241,7 +241,7 @@ void app_main(void) {
         }
 
         // Retrieve transmission status from MCP2515 
-            canintf_t canintf;
+        canintf_t canintf;
         ESP_ERROR_CHECK(canbus_mcp2515_get_interrupt_flags(can_mcp2515_handle, &canintf));
 
         // If a transmit register becomes empty (sucessful transmission), clear its status

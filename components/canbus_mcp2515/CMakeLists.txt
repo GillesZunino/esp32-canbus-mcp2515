@@ -9,7 +9,7 @@ idf_component_register(SRCS ${srcs}
                        REQUIRES "driver esp_driver_gpio")
 
 
-if(CONFIG_CANBUS_MCP2515_SANITIZER)
+if(CONFIG_MCP2515_SANITIZER)
     idf_component_get_property(lib canbus_mcp2515 COMPONENT_LIB)
     target_compile_options(${lib} PRIVATE "-fsanitize=undefined" "-fno-sanitize=shift-base")
 endif()

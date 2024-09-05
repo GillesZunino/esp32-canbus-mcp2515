@@ -3,6 +3,8 @@
 // -----------------------------------------------------------------------------------
 
 
+#include <esp_log.h>
+
 #include "canbus_mcp2515_utils.h"
 
 
@@ -161,4 +163,32 @@ const char* dump_receive_buffer(mcp2515_receive_buffer_t buffer) {
     default:
         return "Unknown mcp2515_receive_buffer_t";
     }
+}
+
+void log_canintf_internal(const char *tag, uint8_t canintf, esp_log_level_t log_level) {
+    ESP_LOG_LEVEL(log_level, tag, "|                  CANINTF: 0x%02X                  |", canintf);
+    ESP_LOG_LEVEL(log_level, tag, "|MERRF|WAKIF|ERRIF|TX2IF|TX1IF|TX0IF|RX1IF|RX0IF|");
+    ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |",
+        canintf & 0x80 ? "x" : " ",
+        canintf & 0x40 ? "x" : " ",
+        canintf & 0x20 ? "x" : " ",
+        canintf & 0x10 ? "x" : " ",
+        canintf & 0x08 ? "x" : " ",
+        canintf & 0x04 ? "x" : " ",
+        canintf & 0x02 ? "x" : " ",
+        canintf & 0x01 ? "x" : " ");
+}
+
+void log_eflg_internal(const char *tag, uint8_t eflg, esp_log_level_t log_level) {
+    ESP_LOG_LEVEL(log_level, tag, "|                   EFLG: 0x%02X                   |", eflg);
+    ESP_LOG_LEVEL(log_level, tag, "|RX1OVR|RX0OVR|TXBOFF|TXEP|RXEP|TXWAR|RXWAR|EWARN|");
+    ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |",
+        eflg & 0x80 ? "x" : " ",
+        eflg & 0x40 ? "x" : " ",
+        eflg & 0x20 ? "x" : " ",
+        eflg & 0x10 ? "x" : " ",
+        eflg & 0x08 ? "x" : " ",
+        eflg & 0x04 ? "x" : " ",
+        eflg & 0x02 ? "x" : " ",
+        eflg & 0x01 ? "x" : " ");
 }

@@ -9,6 +9,37 @@
 extern "C" {
 #endif
 
+
+/**
+ * @brief Displays MCP2515 CANINTF register to the log at specified level.
+ *
+ * @param tag description tag
+ * @param canintf CANINTF register value
+ * @param level level of the log
+ */
+#define MCP2515_LOG_CANINTF( tag, canintf, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_canintf_internal( tag, canintf.flags, level); \
+        } \
+    } while(0)
+
+/**
+ * @brief Displays MCP2515 EFLG register to the log at specified level.
+ *
+ * @param tag description tag
+ * @param canintf EFLG register value
+ * @param level level of the log
+ */
+#define MCP2515_LOG_EFLG( tag, eflg, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_eflg_internal( tag, eflg, level); \
+        } \
+    } while(0)
+
+
+
 const char* dump_blt_mode(canbus_mcp2515_blt_mode_t mode);
 const char* dump_sampling_mode(canbus_mcp2515_sampling_mode_t sampling);
 const char* dump_sof_mode(mcp2515_clkout_sof_mode_t mode);
@@ -24,6 +55,10 @@ const char* dump_filter_mode(mcp2515_filter_mode_t mode);
 const char* dump_mcp2515_mode(mcp2515_mode_t mode);
 const char* dump_transmit_priority(mcp2515_transmit_priority_t priority);
 const char* dump_receive_buffer(mcp2515_receive_buffer_t buffer);
+
+void log_canintf_internal(const char *tag, uint8_t canintf, esp_log_level_t log_level);
+void log_eflg_internal(const char *tag, uint8_t eflg, esp_log_level_t log_level);
+
 
 #ifdef __cplusplus
 }

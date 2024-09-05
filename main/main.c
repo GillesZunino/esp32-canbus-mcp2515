@@ -244,6 +244,7 @@ void app_main(void) {
         // Retrieve transmission status from MCP2515 
         canintf_t canintf;
         ESP_ERROR_CHECK(canbus_mcp2515_get_interrupt_flags(can_mcp2515_handle, &canintf));
+        MCP2515_LOG_CANINTF(TAG, canintf, ESP_LOG_INFO);
 
         // If a transmit register becomes empty (sucessful transmission), clear its status
         if (canintf.bits.tx0if || canintf.bits.tx1if || canintf.bits.tx2if) {
@@ -296,7 +297,8 @@ void app_main(void) {
         ESP_ERROR_CHECK(canbus_mcp2515_get_transmit_error_count(can_mcp2515_handle, &transmitErrorCount));
         ESP_ERROR_CHECK(canbus_mcp2515_get_receive_error_count(can_mcp2515_handle, &receiveErrorCount));
         ESP_ERROR_CHECK(canbus_mcp1515_get_error_flags(can_mcp2515_handle, &eflg));
-        ESP_LOGI(TAG, "MCP2515 REC: %d - TEC: %d - EFLG: 0x%02X", receiveErrorCount, transmitErrorCount, eflg);
+        ESP_LOGI(TAG, "MCP2515 REC: %d - TEC: %d", receiveErrorCount, transmitErrorCount);
+        MCP2515_LOG_EFLG(TAG, eflg, ESP_LOG_INFO);
 
         // Abort tranmissions for all TX buffers
         // ESP_LOGI(TAG, "Configure MCP2515 interrupts");

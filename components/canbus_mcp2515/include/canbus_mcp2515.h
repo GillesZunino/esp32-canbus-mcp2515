@@ -294,7 +294,6 @@ typedef enum {
     MCP2515_RECEIVE_RXB1 = 1
 } mcp2515_receive_buffer_t;
 
-
 typedef union canintf {
     struct {
         uint8_t rx0if: 1;   ///< Receive buffer 0 full
@@ -307,8 +306,21 @@ typedef union canintf {
         uint8_t merrf: 1;   ///< Message error
     }  __attribute__((packed)) bits;
     uint8_t flags;
-}  __attribute__((packed)) canintf_t;
+} __attribute__((packed)) canintf_t;
 
+typedef union eflg {
+    struct {
+        uint8_t rx1ovr: 1;  ///< Receive buffer 1 overflow
+        uint8_t rx0ovr: 1;  ///< Receive buffer 0 overflow
+        uint8_t txboff: 1;  ///< Transmit bus off
+        uint8_t txep: 1;    ///< Transmit error-passive
+        uint8_t rxep: 1;    ///< Receive error-passive
+        uint8_t txwarn: 1;  ///< Transmit error warning
+        uint8_t rxwarn: 1;  ///< Receive error warning
+        uint8_t ewarn: 1;   ///< Error warning
+    }  __attribute__((packed)) bits;
+    uint8_t flags;
+} __attribute__((packed)) eflg_t;
 
 
 /**
@@ -502,7 +514,7 @@ esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle,
  * @param handle    Handle of the MCP2515 device
  * @param flags     Pointer to a memory location which receives the flags
  */
-esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, uint8_t* flags);
+esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, eflg_t* flags);
 
 
 #ifdef __cplusplus

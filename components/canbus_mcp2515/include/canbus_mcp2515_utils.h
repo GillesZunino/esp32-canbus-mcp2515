@@ -34,7 +34,7 @@ extern "C" {
 #define MCP2515_LOG_EFLG( tag, eflg, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
-            log_eflg_internal( tag, eflg, level); \
+            log_eflg_internal( tag, eflg.flags, level); \
         } \
     } while(0)
 

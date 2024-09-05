@@ -293,7 +293,7 @@ void app_main(void) {
         // Retrieve transmit / receive error count
         uint8_t transmitErrorCount = 0;
         uint8_t receiveErrorCount = 0;
-        uint8_t eflg = 0;
+        eflg_t eflg = {0};
         ESP_ERROR_CHECK(canbus_mcp2515_get_transmit_error_count(can_mcp2515_handle, &transmitErrorCount));
         ESP_ERROR_CHECK(canbus_mcp2515_get_receive_error_count(can_mcp2515_handle, &receiveErrorCount));
         ESP_ERROR_CHECK(canbus_mcp1515_get_error_flags(can_mcp2515_handle, &eflg));

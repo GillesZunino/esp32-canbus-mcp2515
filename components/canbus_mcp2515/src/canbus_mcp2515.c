@@ -864,8 +864,8 @@ esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle,
     return mcp2515_read_register(handle, MCP2515_REC, count);
 }
 
-esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, uint8_t* flags) {
-    return mcp2515_read_register(handle, MCP2515_EFLG, flags);
+esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, eflg_t* flags) {
+    return mcp2515_read_register(handle, MCP2515_EFLG, &flags->flags);
 }
 
 

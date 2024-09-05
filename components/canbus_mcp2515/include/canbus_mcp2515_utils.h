@@ -28,13 +28,41 @@ extern "C" {
  * @brief Displays MCP2515 EFLG register to the log at specified level.
  *
  * @param tag description tag
- * @param canintf EFLG register value
+ * @param eflg EFLG register value
  * @param level level of the log
  */
 #define MCP2515_LOG_EFLG( tag, eflg, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
             log_eflg_internal( tag, eflg, level); \
+        } \
+    } while(0)
+
+/**
+ * @brief Displays MCP2515 CANSTAT register to the log at specified level.
+ *
+ * @param tag description tag
+ * @param canstat EFLG register value
+ * @param level level of the log
+ */
+#define MCP2515_LOG_CANSTAT( tag, canstat, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_canstat_internal( tag, canstat, level); \
+        } \
+    } while(0)
+
+/**
+ * @brief Displays MCP2515 CANCTRL register to the log at specified level.
+ *
+ * @param tag description tag
+ * @param canctrl CANCTRL register value
+ * @param level level of the log
+ */
+#define MCP2515_LOG_CANCTRL( tag, canctrl, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_cantrl_internal( tag, canctrl, level); \
         } \
     } while(0)
 

@@ -192,3 +192,30 @@ void log_eflg_internal(const char *tag, uint8_t eflg, esp_log_level_t log_level)
         eflg & 0x02 ? "x" : " ",
         eflg & 0x01 ? "x" : " ");
 }
+
+void log_canstat_internal(const char *tag, uint8_t canstat, esp_log_level_t log_level) {
+    ESP_LOG_LEVEL(log_level, tag, "|                  CANSTAT: 0x%02X                  |", canstat);
+    ESP_LOG_LEVEL(log_level, tag, "|OPMOD2|OPMOD1|OPMOD0| -- |ICOD2|ICOD1|ICOD0|");
+    ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |    |  %s  |  %s  |  %s  |  %s  |",
+        canstat & 0x80 ? "x" : " ",
+        canstat & 0x40 ? "x" : " ",
+        canstat & 0x20 ? "x" : " ",
+        canstat & 0x08 ? "x" : " ",
+        canstat & 0x04 ? "x" : " ",
+        canstat & 0x02 ? "x" : " ",
+        canstat & 0x01 ? "x" : " ");
+}
+
+void log_canctrl_internal(const char *tag, uint8_t canctrl, esp_log_level_t log_level) {
+    ESP_LOG_LEVEL(log_level, tag, "|                  CANCTRL: 0x%02X                  |", canctrl);
+    ESP_LOG_LEVEL(log_level, tag, "|REQOP2|REQOP1|ABAT|OSM|CLKEN|CLKPRE1|CLKPRE0|");
+    ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |",
+        canctrl & 0x80 ? "x" : " ",
+        canctrl & 0x40 ? "x" : " ",
+        canctrl & 0x20 ? "x" : " ",
+        canctrl & 0x10 ? "x" : " ",
+        canctrl & 0x08 ? "x" : " ",
+        canctrl & 0x04 ? "x" : " ",
+        canctrl & 0x02 ? "x" : " ",
+        canctrl & 0x01 ? "x" : " ");
+}

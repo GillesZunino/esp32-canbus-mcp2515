@@ -315,7 +315,7 @@ typedef union {
         uint8_t txwarn: 1;  ///< Transmit error warning
         uint8_t rxep: 1;    ///< Receive error-passive
         uint8_t txep: 1;    ///< Transmit error-passive
-        uint8_t txbo: 1;  ///< Transmit bus off
+        uint8_t txbo: 1;    ///< Transmit bus off
         uint8_t rx0ovr: 1;  ///< Receive buffer 0 overflow
         uint8_t rx1ovr: 1;  ///< Receive buffer 1 overflow
     }  __attribute__((packed)) bits;

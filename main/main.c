@@ -270,7 +270,7 @@ void app_main(void) {
             can_frame_t receivedFrameRxb1;
             mcp2515_receive_filter_hit_t filtersHitRxb1;
 
-            // TODO: Demonstrate how to read messages in order - Reading RXB0 then RXB1
+            // NOTE: This may read messages out of order - Look at the documentation and other samples to see how to receive messages in order if necessary
             if (canintf.bits.rx0if) {
                 ESP_LOGI(TAG, "Reading frame from RXB0");
                 ESP_ERROR_CHECK(canbus_mcp2515_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB0, &receivedFrameRxb0, &filtersHitRxb0));
@@ -299,7 +299,7 @@ void app_main(void) {
         MCP2515_LOG_EFLG(TAG, eflg.flags, ESP_LOG_INFO);
 
         // Abort tranmissions for all TX buffers
-        // ESP_LOGI(TAG, "Configure MCP2515 interrupts");
+        // ESP_LOGI(TAG, "Abort all transmissions");
         // ESP_ERROR_CHECK(canbus_mcp2515_set_transmit_abort(can_mcp2515_handle, MCP2515_TRANSMIT_BEHAVIOR_ABORT));
 
         // Retrieve digital inputs state via TXnRTS pins

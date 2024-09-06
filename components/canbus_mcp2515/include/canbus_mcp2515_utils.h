@@ -169,8 +169,6 @@ void log_rxb1ctrl_internal(const char* tag, uint8_t rxb1ctrl, esp_log_level_t lo
 void log_can_frame_internal(const char* tag, const can_frame_t* frame, esp_log_level_t log_level);
 
 
-
-
 #ifdef __cplusplus
 }
 #endif

@@ -15,7 +15,9 @@
 			},
 			"extensions": [
 				"espressif.esp-idf-extension",
-				"ms-vscode.cpptools-extension-pack"
+				"ms-vscode.cpptools-extension-pack",
+				"aaron-bond.better-comments",
+				"alefragnani.Bookmarks"
 			]
 		},
 		"codespaces": {
@@ -29,7 +31,9 @@
 			},
 			"extensions": [
 				"espressif.esp-idf-extension",
-				"espressif.esp-idf-web"
+				"espressif.esp-idf-web",
+				"aaron-bond.better-comments",
+				"alefragnani.Bookmarks"
 			]
 		}
 	},

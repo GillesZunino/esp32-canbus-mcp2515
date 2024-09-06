@@ -232,7 +232,7 @@ void app_main(void) {
 
             ESP_LOGI(TAG, "Sending frame with index %d", framesSent);
             esp_err_t err = canbus_mcp2515_transmit(can_mcp2515_handle, pCanFrame, &sendOptions, &effectiveTransmitRegister);
-            if (err != ESP_OK) {
+            if (err == ESP_OK) {
                 ESP_LOGI(TAG, "Sent frame with index %d using register '%s'", framesSent, dump_TXBn(effectiveTransmitRegister));
             } else {
                 ESP_LOGE(TAG, "Error sending frame with index %d: %d", framesSent, err);

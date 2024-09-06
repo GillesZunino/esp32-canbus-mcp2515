@@ -246,7 +246,7 @@ void log_can_frame_internal(const char* tag, const can_frame_t* frame, esp_log_l
     } else {
         snprintf(id, sizeof(id) / sizeof(id[0]), "%03X     ", (uint16_t) frame->id);
     }
-    ESP_LOG_LEVEL(log_level, tag, "|ID:0x%s| %s  | %s  | DLC:%1d|                    |",
+    ESP_LOG_LEVEL(log_level, tag, "|ID:0x%s| %s  | %s  |DLC: %1d|                    |",
         id, frame->options & CAN_FRAME_OPTION_EXTENDED ? "IDE" : "   ", frame->options & CAN_FRAME_OPTION_RTR ? "RTR" : "   ",
         frame->dlc);
     

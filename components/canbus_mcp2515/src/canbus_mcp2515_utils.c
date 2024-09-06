@@ -251,6 +251,30 @@ void log_txbnctrl_internal(const char* tag, uint8_t txbnctrl, esp_log_level_t lo
         txbnctrl & (1 << 0) ? "x" : " ");
 }
 
+void log_rxb0ctrl_internal(const char* tag, uint8_t rxb0ctrl, esp_log_level_t log_level) {
+    ESP_LOG_LEVEL(log_level, tag, "|               RXB0CTRL: 0x%02X               |", rxb0ctrl);
+    ESP_LOG_LEVEL(log_level, tag, "| -- |RXM1|RXM0| -- |RXRTR|BUKT|BUKT1|CLKPRE0|");
+    ESP_LOG_LEVEL(log_level, tag, "| -- | %s  | %s  | -- |  %s  | %s  |  %s  |   %s   |",
+        rxb0ctrl & (1 << 6) ? "x" : " ",
+        rxb0ctrl & (1 << 5) ? "x" : " ",
+        rxb0ctrl & (1 << 3) ? "x" : " ",
+        rxb0ctrl & (1 << 2) ? "x" : " ",
+        rxb0ctrl & (1 << 1) ? "x" : " ",
+        rxb0ctrl & (1 << 0) ? "x" : " ");
+}
+
+void log_rxb1ctrl_internal(const char* tag, uint8_t rxb1ctrl, esp_log_level_t log_level) {
+    ESP_LOG_LEVEL(log_level, tag, "|                 RXB0CTRL: 0x%02X                  |", rxb1ctrl);
+    ESP_LOG_LEVEL(log_level, tag, "| -- |RXM1|RXM0| -- |RXRTR|FILHIT2|FILHIT1|FILHIT0|");
+    ESP_LOG_LEVEL(log_level, tag, "| -- | %s  | %s  | -- |  %s  |   %s   |   %s   |   %s   |",
+        rxb1ctrl & (1 << 6) ? "x" : " ",
+        rxb1ctrl & (1 << 5) ? "x" : " ",
+        rxb1ctrl & (1 << 3) ? "x" : " ",
+        rxb1ctrl & (1 << 2) ? "x" : " ",
+        rxb1ctrl & (1 << 1) ? "x" : " ",
+        rxb1ctrl & (1 << 0) ? "x" : " ");
+}
+
 void log_can_frame_internal(const char* tag, const can_frame_t* frame, esp_log_level_t log_level) {
     char id[8 + 1 + 1];
     if (frame->options & CAN_FRAME_OPTION_EXTENDED) {

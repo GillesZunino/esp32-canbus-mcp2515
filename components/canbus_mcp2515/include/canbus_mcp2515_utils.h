@@ -95,6 +95,34 @@ extern "C" {
     } while(0)
 
 /**
+ * @brief Displays MCP2515 RXB0CTRL register to the log at specified level.
+ *
+ * @param tag description tag
+ * @param rxb0ctrl RXB0CTRL register value
+ * @param level level of the log
+ */
+#define MCP2515_LOG_RXB0CTRL( tag, rxb0ctrl, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_rxb0ctrl_internal(tag, rxb0ctrl, level); \
+        } \
+    } while(0)
+
+/**
+ * @brief Displays MCP2515 RXB1CTRL register to the log at specified level.
+ *
+ * @param tag description tag
+ * @param rxb1ctrl RXB1CTRL register value
+ * @param level level of the log
+ */
+#define MCP2515_LOG_RXB1CTRL( tag, rxb1ctrl, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_rxb1ctrl_internal(tag, rxb1ctrl, level); \
+        } \
+    } while(0)
+
+/**
  * @brief Displays a CAN V2.0B frame to the log at specified level.
  *
  * @param tag description tag
@@ -134,6 +162,9 @@ void log_eflg_internal(const char* tag, uint8_t eflg, esp_log_level_t log_level)
 void log_canstat_internal(const char* tag, uint8_t canstat, esp_log_level_t log_level);
 void log_canctrl_internal(const char* tag, uint8_t canctrl, esp_log_level_t log_level);
 void log_txbnctrl_internal(const char* tag, uint8_t txbnctrl, esp_log_level_t log_level);
+
+void log_rxb0ctrl_internal(const char* tag, uint8_t rxb0ctrl, esp_log_level_t log_level);
+void log_rxb1ctrl_internal(const char* tag, uint8_t rxb1ctrl, esp_log_level_t log_level);
 
 void log_can_frame_internal(const char* tag, const can_frame_t* frame, esp_log_level_t log_level);
 

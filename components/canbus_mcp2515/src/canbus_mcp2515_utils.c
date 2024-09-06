@@ -239,6 +239,18 @@ void log_canctrl_internal(const char* tag, uint8_t canctrl, esp_log_level_t log_
         canctrl & (1 << 0) ? "x" : " ");
 }
 
+void log_txbnctrl_internal(const char* tag, uint8_t txbnctrl, esp_log_level_t log_level) {
+    ESP_LOG_LEVEL(log_level, tag, "|             TXBnCTRL: 0x%02X              |", txbnctrl);
+    ESP_LOG_LEVEL(log_level, tag, "| -- |ABTF|MLOA|TXERR|TXREQ| -- |TXP1|TXP0|");
+    ESP_LOG_LEVEL(log_level, tag, "| -- | %s  | %s  |  %s  |  %s  | -- | %s  | %s  |",
+        txbnctrl & (1 << 6) ? "x" : " ",
+        txbnctrl & (1 << 5) ? "x" : " ",
+        txbnctrl & (1 << 4) ? "x" : " ",
+        txbnctrl & (1 << 3) ? "x" : " ",
+        txbnctrl & (1 << 1) ? "x" : " ",
+        txbnctrl & (1 << 0) ? "x" : " ");
+}
+
 void log_can_frame_internal(const char* tag, const can_frame_t* frame, esp_log_level_t log_level) {
     char id[8 + 1 + 1];
     if (frame->options & CAN_FRAME_OPTION_EXTENDED) {

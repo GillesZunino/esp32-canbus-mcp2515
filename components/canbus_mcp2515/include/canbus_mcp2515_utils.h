@@ -81,6 +81,20 @@ extern "C" {
     } while(0)
 
 /**
+ * @brief Displays MCP2515 TXBnCTRL register to the log at specified level.
+ *
+ * @param tag description tag
+ * @param canctrl TXBnCTRL register value
+ * @param level level of the log
+ */
+#define MCP2515_LOG_TXBnCTRL( tag, txbnctrl, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_txbnctrl_internal(tag, txbnctrl, level); \
+        } \
+    } while(0)
+
+/**
  * @brief Displays a CAN V2.0B frame to the log at specified level.
  *
  * @param tag description tag
@@ -93,6 +107,7 @@ extern "C" {
             log_can_frame_internal(tag, frame, level); \
         } \
     } while(0)
+
 
 
 const char* dump_blt_mode(canbus_mcp2515_blt_mode_t mode);
@@ -118,8 +133,11 @@ void log_canintf_internal(const char* tag, uint8_t caninte, esp_log_level_t log_
 void log_eflg_internal(const char* tag, uint8_t eflg, esp_log_level_t log_level);
 void log_canstat_internal(const char* tag, uint8_t canstat, esp_log_level_t log_level);
 void log_canctrl_internal(const char* tag, uint8_t canctrl, esp_log_level_t log_level);
+void log_txbnctrl_internal(const char* tag, uint8_t txbnctrl, esp_log_level_t log_level);
 
 void log_can_frame_internal(const char* tag, const can_frame_t* frame, esp_log_level_t log_level);
+
+
 
 
 #ifdef __cplusplus

@@ -156,7 +156,7 @@ esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, co
         ESP_GOTO_ON_ERROR(gpio_config(&gpioConfig), cleanup, CanBusMCP2515LogTag, "%s() Failed to configure GPIO pin %d", __func__, config->intr_io_num);
 
         // Attach the interrupt handler to the GPIO pin
-        // TODO: Choose the right interrupt attachmecanism
+        // TODO: Choose the right interrupt attach mecanism
         //ESP_GOTO_ON_ERROR
         //gpio_isr_register(gpio_num_t gpio_num, gpio_isr_t isr_handler, void *args, int intr_alloc_flags, esp_err_t *err);
         //OR
@@ -274,7 +274,7 @@ esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const
     }
 
     // MCP2515 needs to be in configuration mode to change bit timing
-    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
     // Copy bit configuration so we can re-apply it as needed
     handle->bit_timing_config = *bitTimingConfig;
@@ -323,7 +323,7 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
     }
 
     // MCP2515 needs to be in configuration mode to set filtering
-    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
     // Select the mask register associated with the requested filter
     mcp2515_register_t maskRegister = (filter->rxfn == RXF0) || (filter->rxfn == RXF1) ? MCP2515_RXM0SIDH : MCP2515_RXM1SIDH;
@@ -427,7 +427,7 @@ esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t
     }
 
     // MCP2515 needs to be in configuration mode to change CNF3
-    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
     // Configure WAKFIL via CANCTRL[6]
     uint8_t cnf3 = filter == MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED ? 0x40 : 0x00;
@@ -450,7 +450,7 @@ esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, co
     uint8_t cnf3 = config->mode == MCP2515_CLKOUT_PIN_SOF ? 0x80 : 0x00;
 
     // MCP2515 needs to be in configuration mode to change CNF3
-    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
     // Take exclusive access of the SPI bus during configuration
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
@@ -480,7 +480,7 @@ esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const 
     }
 
     // MCP2515 needs to be in configuration mode to change TXRTSCTRL
-    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "%s() MCP2515 is not in configuration mode", __func__);
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
     // Configure TXRTSCTRL via TXRTSCTRL[2:0]
     uint8_t txrtsctrl = (config->tx0rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 1 : 0) | (config->tx1rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 2 : 0) | (config->tx2rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 4 : 0);
@@ -1093,7 +1093,7 @@ static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp25
     esp_err_t err = canbus_mcp2515_get_mode(handle, &mode);
     if (err == ESP_OK) {
 #if CONFIG_MCP2515_ENABLE_DEBUG_LOG
-        ESP_LOGI(CanBusMCP2515LogTag, "%s() MCP2515 current mode '%s", __func__, dump_mcp2515_mode(mode));
+        ESP_LOGI(CanBusMCP2515LogTag, "%s() MCP2515 current mode '%s'", __func__, dump_mcp2515_mode(mode));
 #endif
         return mode == MCP2515_MODE_CONFIG ? ESP_OK : ESP_ERR_NOT_ALLOWED;
     }

@@ -71,7 +71,7 @@ void app_main(void) {
     ESP_LOGI(TAG, "Reset MCP2515 after power on");
     ESP_ERROR_CHECK(canbus_mcp2515_reset(can_mcp2515_handle));
 
-    // Configure low pass fitler for wake-up
+    // Configure low pass filter for wake-up
     ESP_LOGI(TAG, "Configure MCP2515 Wake-up low pass filter");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_wakeup_lowpass_filter(can_mcp2515_handle, MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED));
 
@@ -148,7 +148,6 @@ void app_main(void) {
 
     // Standard CAN frame which will pass filtering
     can_frame_t filterdInStandardFrame = {
-        // TODO: Make this work
         .id = 0x123,
         .dlc = 8,
         .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
@@ -156,7 +155,6 @@ void app_main(void) {
 
     // CAN frame which will be filtered out
     can_frame_t filterdOutStandardFrame = {
-        // TODO: Make this work
         .id = 0x456,
         .dlc = 8,
         .data = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08 }
@@ -164,7 +162,6 @@ void app_main(void) {
 
     // Extended CAN frame which will pass filtering
     can_frame_t filterdInExtendedFrame = {
-        // TODO: Make this work
         .options = CAN_FRAME_OPTION_EXTENDED,
         .id = 0x1234567,
         .dlc = 8,
@@ -173,7 +170,6 @@ void app_main(void) {
 
     // Extended CAN frame which will be filtered out
     can_frame_t filterdOutExtendedFrame = {
-        // TODO: Make this work
         .options = CAN_FRAME_OPTION_EXTENDED,
         .id = 0x7654321,
         .dlc = 8,
@@ -197,7 +193,7 @@ void app_main(void) {
 
     uint8_t framesSent = 0;
 
-    // Used to toggle digitial outputs (RXnBF) HIGH and LOW
+    // Used to toggle digital outputs (RXnBF) HIGH and LOW
     uint8_t rx0Counter = 0;
     uint8_t rx1Counter = 0;
     do {
@@ -237,6 +233,8 @@ void app_main(void) {
             ESP_LOGI(TAG, "Sending frame with index %d", framesSent);
             esp_err_t err = canbus_mcp2515_transmit(can_mcp2515_handle, pCanFrame, &sendOptions, &effectiveTransmitRegister);
             if (err != ESP_OK) {
+                ESP_LOGI(TAG, "Sent frame with index %d using register '%s'", framesSent, dump_TXBn(effectiveTransmitRegister));
+            } else {
                 ESP_LOGE(TAG, "Error sending frame with index %d: %d", framesSent, err);
             }
         }
@@ -290,7 +288,7 @@ void app_main(void) {
             }
         }
 
-        // Retrieve transmit / receive error count
+        // Retrieve transmit / receive error count / error flags
         uint8_t transmitErrorCount = 0;
         uint8_t receiveErrorCount = 0;
         eflg_t eflg = {0};

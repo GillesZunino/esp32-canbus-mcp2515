@@ -29,9 +29,6 @@ const char* dump_sampling_mode(canbus_mcp2515_sampling_mode_t sampling) {
     }
 }
 
-// TODO: Multiples values
-// const char* dump_interupts(mcp2515_interrupts_t interrupts);
-
 const char* dump_sof_mode(mcp2515_clkout_sof_mode_t mode) {
     switch (mode) {
         CASE_RETURN_STR(MCP2515_CLKOUT_PIN_OFF)
@@ -172,6 +169,20 @@ const char* dump_frame_options(can_frame_options_t options) {
     default:
         return "Unknown can_frame_options_t";
     }
+}
+
+void log_caninte_internal(const char *tag, uint8_t caninte, esp_log_level_t log_level) {
+    ESP_LOG_LEVEL(log_level, tag, "|                 CANINTE: 0x%02X                 |", caninte);
+    ESP_LOG_LEVEL(log_level, tag, "|MERRE|WAKIE|ERRIE|TX2IE|TX1IE|TX0IE|RX1IE|RX0IE|");
+    ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |",
+        caninte & (1 << 7) ? "x" : " ",
+        caninte & (1 << 6) ? "x" : " ",
+        caninte & (1 << 5) ? "x" : " ",
+        caninte & (1 << 4) ? "x" : " ",
+        caninte & (1 << 3) ? "x" : " ",
+        caninte & (1 << 2) ? "x" : " ",
+        caninte & (1 << 1) ? "x" : " ",
+        caninte & (1 << 0) ? "x" : " ");
 }
 
 void log_canintf_internal(const char *tag, uint8_t canintf, esp_log_level_t log_level) {

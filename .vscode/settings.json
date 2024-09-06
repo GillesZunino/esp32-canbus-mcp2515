@@ -40,6 +40,7 @@
 
   "idf.portWin": "COM3",
   "idf.flashType": "JTAG",
+  
   "files.associations": {
   }
 }

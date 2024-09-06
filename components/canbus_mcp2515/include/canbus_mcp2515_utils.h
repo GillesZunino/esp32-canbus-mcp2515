@@ -20,7 +20,7 @@ extern "C" {
 #define MCP2515_LOG_CANINTE( tag, caninte, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
-            log_caninte_internal( tag, caninte, level); \
+            log_caninte_internal(tag, caninte, level); \
         } \
     } while(0)
 
@@ -34,7 +34,7 @@ extern "C" {
 #define MCP2515_LOG_CANINTF( tag, canintf, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
-            log_canintf_internal( tag, canintf, level); \
+            log_canintf_internal(tag, canintf, level); \
         } \
     } while(0)
 
@@ -48,7 +48,7 @@ extern "C" {
 #define MCP2515_LOG_EFLG( tag, eflg, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
-            log_eflg_internal( tag, eflg, level); \
+            log_eflg_internal(tag, eflg, level); \
         } \
     } while(0)
 
@@ -62,7 +62,7 @@ extern "C" {
 #define MCP2515_LOG_CANSTAT( tag, canstat, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
-            log_canstat_internal( tag, canstat, level); \
+            log_canstat_internal(tag, canstat, level); \
         } \
     } while(0)
 
@@ -76,10 +76,23 @@ extern "C" {
 #define MCP2515_LOG_CANCTRL( tag, canctrl, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
-            log_canctrl_internal( tag, canctrl, level); \
+            log_canctrl_internal(tag, canctrl, level); \
         } \
     } while(0)
 
+/**
+ * @brief Displays a CAN V2.0B frame to the log at specified level.
+ *
+ * @param tag description tag
+ * @param frame pointer to can_frame_t structure to log
+ * @param level level of the log
+ */
+#define MCP2515_LOG_CAN_FRAME( tag, frame, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_can_frame_internal(tag, frame, level); \
+        } \
+    } while(0)
 
 
 const char* dump_blt_mode(canbus_mcp2515_blt_mode_t mode);
@@ -100,11 +113,13 @@ const char* dump_receive_buffer(mcp2515_receive_buffer_t buffer);
 
 const char* dump_frame_options(can_frame_options_t options);
 
-void log_caninte_internal(const char *tag, uint8_t caninte, esp_log_level_t log_level);
-void log_canintf_internal(const char *tag, uint8_t caninte, esp_log_level_t log_level);
-void log_eflg_internal(const char *tag, uint8_t eflg, esp_log_level_t log_level);
-void log_canstat_internal(const char *tag, uint8_t canstat, esp_log_level_t log_level);
-void log_canctrl_internal(const char *tag, uint8_t canctrl, esp_log_level_t log_level);
+void log_caninte_internal(const char* tag, uint8_t caninte, esp_log_level_t log_level);
+void log_canintf_internal(const char* tag, uint8_t caninte, esp_log_level_t log_level);
+void log_eflg_internal(const char* tag, uint8_t eflg, esp_log_level_t log_level);
+void log_canstat_internal(const char* tag, uint8_t canstat, esp_log_level_t log_level);
+void log_canctrl_internal(const char* tag, uint8_t canctrl, esp_log_level_t log_level);
+
+void log_can_frame_internal(const char* tag, const can_frame_t* frame, esp_log_level_t log_level);
 
 
 #ifdef __cplusplus

@@ -171,7 +171,7 @@ const char* dump_frame_options(can_frame_options_t options) {
     }
 }
 
-void log_caninte_internal(const char *tag, uint8_t caninte, esp_log_level_t log_level) {
+void log_caninte_internal(const char* tag, uint8_t caninte, esp_log_level_t log_level) {
     ESP_LOG_LEVEL(log_level, tag, "|                 CANINTE: 0x%02X                 |", caninte);
     ESP_LOG_LEVEL(log_level, tag, "|MERRE|WAKIE|ERRIE|TX2IE|TX1IE|TX0IE|RX1IE|RX0IE|");
     ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |",
@@ -185,7 +185,7 @@ void log_caninte_internal(const char *tag, uint8_t caninte, esp_log_level_t log_
         caninte & (1 << 0) ? "x" : " ");
 }
 
-void log_canintf_internal(const char *tag, uint8_t canintf, esp_log_level_t log_level) {
+void log_canintf_internal(const char* tag, uint8_t canintf, esp_log_level_t log_level) {
     ESP_LOG_LEVEL(log_level, tag, "|                 CANINTF: 0x%02X                 |", canintf);
     ESP_LOG_LEVEL(log_level, tag, "|MERRF|WAKIF|ERRIF|TX2IF|TX1IF|TX0IF|RX1IF|RX0IF|");
     ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |",
@@ -199,7 +199,7 @@ void log_canintf_internal(const char *tag, uint8_t canintf, esp_log_level_t log_
         canintf & (1 << 0) ? "x" : " ");
 }
 
-void log_eflg_internal(const char *tag, uint8_t eflg, esp_log_level_t log_level) {
+void log_eflg_internal(const char* tag, uint8_t eflg, esp_log_level_t log_level) {
     ESP_LOG_LEVEL(log_level, tag, "|                   EFLG: 0x%02X                   |", eflg);
     ESP_LOG_LEVEL(log_level, tag, "|RX1OVR|RX0OVR|TXBOFF|TXEP|RXEP|TXWAR|RXWAR|EWARN|");
     ESP_LOG_LEVEL(log_level, tag, "|   %s  |   %s  |   %s |  %s |  %s  |  %s  |  %s  |  %s  |",
@@ -213,7 +213,7 @@ void log_eflg_internal(const char *tag, uint8_t eflg, esp_log_level_t log_level)
         eflg & (1 << 0) ? "x" : " ");
 }
 
-void log_canstat_internal(const char *tag, uint8_t canstat, esp_log_level_t log_level) {
+void log_canstat_internal(const char* tag, uint8_t canstat, esp_log_level_t log_level) {
     ESP_LOG_LEVEL(log_level, tag, "|                  CANSTAT: 0x%02X                 |", canstat);
     ESP_LOG_LEVEL(log_level, tag, "|OPMOD2|OPMOD1|OPMOD0| -- |ICOD2|ICOD1|ICOD0| -- |");
     ESP_LOG_LEVEL(log_level, tag, "|   %s  |   %s  |   %s  | -- |  %s  |  %s  |  %s  | -- |",
@@ -225,7 +225,7 @@ void log_canstat_internal(const char *tag, uint8_t canstat, esp_log_level_t log_
         canstat & (1 << 1) ? "x" : " ");
 }
 
-void log_canctrl_internal(const char *tag, uint8_t canctrl, esp_log_level_t log_level) {
+void log_canctrl_internal(const char* tag, uint8_t canctrl, esp_log_level_t log_level) {
     ESP_LOG_LEVEL(log_level, tag, "|                   CANCTRL: 0x%02X                   |", canctrl);
     ESP_LOG_LEVEL(log_level, tag, "|REQOP2|REQOP1|REQOP0|ABAT|OSM|CLKEN|CLKPRE1|CLKPRE0|");
     ESP_LOG_LEVEL(log_level, tag, "|   %s  |   %s  |   %s  |  %s | %s |  %s  |   %s   |   %s   |",
@@ -237,4 +237,42 @@ void log_canctrl_internal(const char *tag, uint8_t canctrl, esp_log_level_t log_
         canctrl & (1 << 2) ? "x" : " ",
         canctrl & (1 << 1) ? "x" : " ",
         canctrl & (1 << 0) ? "x" : " ");
+}
+
+void log_can_frame_internal(const char* tag, const can_frame_t* frame, esp_log_level_t log_level) {
+    char id[8 + 1 + 1];
+    if (frame->options & CAN_FRAME_OPTION_EXTENDED) {
+        snprintf(id, sizeof(id) / sizeof(id[0]), "%08lX", frame->id);
+    } else {
+        snprintf(id, sizeof(id) / sizeof(id[0]), "%03X     ", (uint16_t) frame->id);
+    }
+    ESP_LOG_LEVEL(log_level, tag, "|ID:0x%s| %s  | %s  | DLC:%1d|                    |",
+        id, frame->options & CAN_FRAME_OPTION_EXTENDED ? "IDE" : "   ", frame->options & CAN_FRAME_OPTION_RTR ? "RTR" : "   ",
+        frame->dlc);
+    
+    char dl0[4 + 1] = "    ";
+    if (frame->dlc >= 1) { snprintf(dl0, sizeof(dl0) / sizeof(dl0[0]), "0x%02X", frame->data[0]); }
+
+    char dl1[4 + 1] = "    ";
+    if (frame->dlc >= 2) { snprintf(dl1, sizeof(dl1) / sizeof(dl1[0]), "0x%02X", frame->data[1]); }
+
+    char dl2[4 + 1] = "    ";
+    if (frame->dlc >= 3) { snprintf(dl2, sizeof(dl2) / sizeof(dl2[0]), "0x%02X", frame->data[2]); }
+
+    char dl3[4 + 1] = "    ";
+    if (frame->dlc >= 4) { snprintf(dl3, sizeof(dl3) / sizeof(dl3[0]), "0x%02X", frame->data[3]); }
+
+    char dl4[4 + 1] = "    ";
+    if (frame->dlc >= 5) { snprintf(dl4, sizeof(dl4) / sizeof(dl4[0]), "0x%02X", frame->data[4]); }
+
+    char dl5[4 + 1] = "    ";
+    if (frame->dlc >= 6) { snprintf(dl5, sizeof(dl5) / sizeof(dl5[0]), "0x%02X", frame->data[5]); }
+
+    char dl6[4 + 1] = "    ";
+    if (frame->dlc >= 7) { snprintf(dl6, sizeof(dl6) / sizeof(dl6[0]), "0x%02X", frame->data[6]); }
+
+    char dl7[4 + 1] = "    ";
+    if (frame->dlc == 8) { snprintf(dl7, sizeof(dl7) / sizeof(dl7[0]), "0x%02X", frame->data[7]); }
+
+    ESP_LOG_LEVEL(log_level, tag, "| %s | %s | %s | %s | %s | %s | %s | %s |", dl0, dl1, dl2, dl3, dl4, dl5, dl6, dl7);
 }

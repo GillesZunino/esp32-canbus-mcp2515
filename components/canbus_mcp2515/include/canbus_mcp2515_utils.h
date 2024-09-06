@@ -62,7 +62,7 @@ extern "C" {
 #define MCP2515_LOG_CANCTRL( tag, canctrl, level ) \
     do { \
         if ( LOG_LOCAL_LEVEL >= (level) ) { \
-            log_cantrl_internal( tag, canctrl, level); \
+            log_canctrl_internal( tag, canctrl, level); \
         } \
     } while(0)
 

@@ -175,56 +175,55 @@ const char* dump_frame_options(can_frame_options_t options) {
 }
 
 void log_canintf_internal(const char *tag, uint8_t canintf, esp_log_level_t log_level) {
-    ESP_LOG_LEVEL(log_level, tag, "|                  CANINTF: 0x%02X                  |", canintf);
+    ESP_LOG_LEVEL(log_level, tag, "|                 CANINTF: 0x%02X                 |", canintf);
     ESP_LOG_LEVEL(log_level, tag, "|MERRF|WAKIF|ERRIF|TX2IF|TX1IF|TX0IF|RX1IF|RX0IF|");
     ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |",
-        canintf & 0x80 ? "x" : " ",
-        canintf & 0x40 ? "x" : " ",
-        canintf & 0x20 ? "x" : " ",
-        canintf & 0x10 ? "x" : " ",
-        canintf & 0x08 ? "x" : " ",
-        canintf & 0x04 ? "x" : " ",
-        canintf & 0x02 ? "x" : " ",
-        canintf & 0x01 ? "x" : " ");
+        canintf & (1 << 7) ? "x" : " ",
+        canintf & (1 << 6) ? "x" : " ",
+        canintf & (1 << 5) ? "x" : " ",
+        canintf & (1 << 4) ? "x" : " ",
+        canintf & (1 << 3) ? "x" : " ",
+        canintf & (1 << 2) ? "x" : " ",
+        canintf & (1 << 1) ? "x" : " ",
+        canintf & (1 << 0) ? "x" : " ");
 }
 
 void log_eflg_internal(const char *tag, uint8_t eflg, esp_log_level_t log_level) {
     ESP_LOG_LEVEL(log_level, tag, "|                   EFLG: 0x%02X                   |", eflg);
     ESP_LOG_LEVEL(log_level, tag, "|RX1OVR|RX0OVR|TXBOFF|TXEP|RXEP|TXWAR|RXWAR|EWARN|");
-    ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |",
-        eflg & 0x80 ? "x" : " ",
-        eflg & 0x40 ? "x" : " ",
-        eflg & 0x20 ? "x" : " ",
-        eflg & 0x10 ? "x" : " ",
-        eflg & 0x08 ? "x" : " ",
-        eflg & 0x04 ? "x" : " ",
-        eflg & 0x02 ? "x" : " ",
-        eflg & 0x01 ? "x" : " ");
+    ESP_LOG_LEVEL(log_level, tag, "|   %s  |   %s  |   %s |  %s |  %s  |  %s  |  %s  |  %s  |",
+        eflg & (1 << 7) ? "x" : " ",
+        eflg & (1 << 6) ? "x" : " ",
+        eflg & (1 << 5) ? "x" : " ",
+        eflg & (1 << 4) ? "x" : " ",
+        eflg & (1 << 3) ? "x" : " ",
+        eflg & (1 << 2) ? "x" : " ",
+        eflg & (1 << 1) ? "x" : " ",
+        eflg & (1 << 0) ? "x" : " ");
 }
 
 void log_canstat_internal(const char *tag, uint8_t canstat, esp_log_level_t log_level) {
-    ESP_LOG_LEVEL(log_level, tag, "|                  CANSTAT: 0x%02X                  |", canstat);
-    ESP_LOG_LEVEL(log_level, tag, "|OPMOD2|OPMOD1|OPMOD0| -- |ICOD2|ICOD1|ICOD0|");
-    ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |    |  %s  |  %s  |  %s  |  %s  |",
-        canstat & 0x80 ? "x" : " ",
-        canstat & 0x40 ? "x" : " ",
-        canstat & 0x20 ? "x" : " ",
-        canstat & 0x08 ? "x" : " ",
-        canstat & 0x04 ? "x" : " ",
-        canstat & 0x02 ? "x" : " ",
-        canstat & 0x01 ? "x" : " ");
+    ESP_LOG_LEVEL(log_level, tag, "|                  CANSTAT: 0x%02X                 |", canstat);
+    ESP_LOG_LEVEL(log_level, tag, "|OPMOD2|OPMOD1|OPMOD0| -- |ICOD2|ICOD1|ICOD0| -- |");
+    ESP_LOG_LEVEL(log_level, tag, "|   %s  |   %s  |   %s  | -- |  %s  |  %s  |  %s  | -- |",
+        canstat & (1 << 7) ? "x" : " ",
+        canstat & (1 << 6) ? "x" : " ",
+        canstat & (1 << 5) ? "x" : " ",
+        canstat & (1 << 3) ? "x" : " ",
+        canstat & (1 << 2) ? "x" : " ",
+        canstat & (1 << 1) ? "x" : " ");
 }
 
 void log_canctrl_internal(const char *tag, uint8_t canctrl, esp_log_level_t log_level) {
-    ESP_LOG_LEVEL(log_level, tag, "|                  CANCTRL: 0x%02X                  |", canctrl);
-    ESP_LOG_LEVEL(log_level, tag, "|REQOP2|REQOP1|ABAT|OSM|CLKEN|CLKPRE1|CLKPRE0|");
-    ESP_LOG_LEVEL(log_level, tag, "|  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |  %s  |",
-        canctrl & 0x80 ? "x" : " ",
-        canctrl & 0x40 ? "x" : " ",
-        canctrl & 0x20 ? "x" : " ",
-        canctrl & 0x10 ? "x" : " ",
-        canctrl & 0x08 ? "x" : " ",
-        canctrl & 0x04 ? "x" : " ",
-        canctrl & 0x02 ? "x" : " ",
-        canctrl & 0x01 ? "x" : " ");
+    ESP_LOG_LEVEL(log_level, tag, "|                   CANCTRL: 0x%02X                   |", canctrl);
+    ESP_LOG_LEVEL(log_level, tag, "|REQOP2|REQOP1|REQOP0|ABAT|OSM|CLKEN|CLKPRE1|CLKPRE0|");
+    ESP_LOG_LEVEL(log_level, tag, "|   %s  |   %s  |   %s  |  %s | %s |  %s  |   %s   |   %s   |",
+        canctrl & (1 << 7) ? "x" : " ",
+        canctrl & (1 << 6) ? "x" : " ",
+        canctrl & (1 << 5) ? "x" : " ",
+        canctrl & (1 << 4) ? "x" : " ",
+        canctrl & (1 << 3) ? "x" : " ",
+        canctrl & (1 << 2) ? "x" : " ",
+        canctrl & (1 << 1) ? "x" : " ",
+        canctrl & (1 << 0) ? "x" : " ");
 }

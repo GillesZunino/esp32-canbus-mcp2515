@@ -10,8 +10,11 @@ debug.log
 esp-idf-vscode-generated.gdb
 
 # ESP-IDF build intermediates and output
-**/managed_components/** */
+**/managed_components/**
 **/build/**
 
 # ESP-IDF component manager lock file
 **/dependencies.lock
+
+# ESP-IDF unit test
+**/unity-app/**

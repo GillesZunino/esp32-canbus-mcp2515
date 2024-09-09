@@ -327,10 +327,10 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
     // MCP2515 needs to be in configuration mode to set filtering
     ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
-    // Select the mask register associated with the requested filter
+    // Select the mask registers associated with the requested filter
     mcp2515_register_t maskRegister = (filter->rxfn == RXF0) || (filter->rxfn == RXF1) ? MCP2515_RXM0SIDH : MCP2515_RXM1SIDH;
 
-    // Select the register to load for the requested filter
+    // Select the filter registers to load for the requested filter
     mcp2515_register_t filterRegister;
     switch (filter->rxfn) {
         case RXF0:
@@ -366,31 +366,70 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
     WORD_ALIGNED_ATTR uint8_t maskSpiBuffer[count];
 
     switch (filter->mode) {
-        case MCP2515_FILTER_STANDARD_FRAME:
-            filterSpiBuffer[0] = (uint8_t) ((filter->filter.standard_frame.id_filter >> 3) & 0x00FF);           // RXFnSIDH
-            filterSpiBuffer[1] = (uint8_t)((filter->filter.standard_frame.id_filter & 0x0007) << 3);            // RXFnSIDL
-            filterSpiBuffer[2] = (uint8_t) ((filter->filter.standard_frame.data_filter & 0xFF00) >> 8);         // RXFnSEID8
-            filterSpiBuffer[3] = (uint8_t) (filter->filter.standard_frame.data_filter & 0x00FF);                // RXFnSEID0
+        case MCP2515_FILTER_STANDARD_FRAME: {
+            //
+            // Standard frame mode - The filter applies to standard frames only and includes the first two frame data bytes
+            //
 
-            maskSpiBuffer[0] = (uint8_t) ((filter->filter.standard_frame.id_mask >> 3) & 0x00FF);               // RXMnSIDH
-            maskSpiBuffer[1] = (uint8_t) ((filter->filter.standard_frame.id_mask & 0x0007) << 3);               // RXMnSIDL
-            maskSpiBuffer[2] = (uint8_t) ((filter->filter.standard_frame.data_mask & 0xFF00) >> 8);             // RXMnEID8
-            maskSpiBuffer[3] = (uint8_t) (filter->filter.standard_frame.data_mask & 0x00FF);                    // RXMnEID0
-            break;
+            // Fill in RXFnSIDH and RXFnSIDL in filterSpiBuffer[0..1] and ...
+            // NOTE: The encoding function will set EXIDE (RXFnSIDL[3]) and EID17..EID16 (RXFnSIDL[1:0]) to 0 in standard frame mode as required by MCP2515
+            encode_canid_into_mcp2515_registers_private(filter->filter.standard_frame.id_filter, false, filterSpiBuffer);
+            // ... RXFnSEID8 and RXFnSEID0 with the data filter portion in filterSpiBuffer[2..3]
+            filterSpiBuffer[2] = (uint8_t) ((filter->filter.standard_frame.data_filter & 0xFF00) >> 8);
+            filterSpiBuffer[3] = (uint8_t) (filter->filter.standard_frame.data_filter & 0x00FF);
+
+            // Fill in RXMnSIDH and RXMnSIDL in maskSpiBuffer[0..1] and ...
+            // NOTE: The encoding function will set EID17..EID16 (RXMnSIDL[1:0]) to 0 in standard frame mode as required by MCP2515
+            encode_canid_into_mcp2515_registers_private(filter->filter.standard_frame.id_mask, false, maskSpiBuffer);
+            // ... RXMnEID8 and RXMnEID0 with the data mask portion in maskSpiBuffer[2..3]
+            maskSpiBuffer[2] = (uint8_t) ((filter->filter.standard_frame.data_mask & 0xFF00) >> 8);
+            maskSpiBuffer[3] = (uint8_t) (filter->filter.standard_frame.data_mask & 0x00FF);
+
+            // TODO: Remove when the new implmentation is confirmed to work
+            // uint16_t idFilter = filter->filter.standard_frame.id_filter;
+            // uint16_t dataFilter = filter->filter.standard_frame.data_filter;
+            // filterSpiBuffer[0] = (uint8_t) ((idFilter >> 3) & 0x00FF);           // RXFnSIDH
+            // filterSpiBuffer[1] = (uint8_t)((idFilter & 0x0007) << 3);            // RXFnSIDL
+            // filterSpiBuffer[2] = (uint8_t) ((dataFilter & 0xFF00) >> 8);         // RXFnSEID8
+            // filterSpiBuffer[3] = (uint8_t) (dataFilter & 0x00FF);                // RXFnSEID0
+    
+            // uint16_t idMask = filter->filter.standard_frame.id_mask;
+            // uint16_t dataMask = filter->filter.standard_frame.data_mask;
+            // maskSpiBuffer[0] = (uint8_t) ((idMask >> 3) & 0x00FF);               // RXMnSIDH
+            // maskSpiBuffer[1] = (uint8_t) ((idMask & 0x0007) << 3);               // RXMnSIDL
+            // maskSpiBuffer[2] = (uint8_t) ((dataMask & 0xFF00) >> 8);             // RXMnEID8
+            // maskSpiBuffer[3] = (uint8_t) (dataMask & 0x00FF);                    // RXMnEID0
+            // TODO: END
+        }
+        break;
         
-        case MCP2515_FILTER_EXTENDED_FRAME:
-            filterSpiBuffer[0] = (uint8_t) ((filter->filter.extended_frame.eid_filter & 0x1FFC0000UL) >> 18);   // RXFnSIDH
-            filterSpiBuffer[1] = (uint8_t) (((filter->filter.extended_frame.eid_mask & 0xE00000UL) >> 11) | 8 | 
-                                            ((filter->filter.extended_frame.eid_mask & 0x030000UL) >> 16));     // RXFnSIDL
-            filterSpiBuffer[2] = (uint8_t) ((filter->filter.extended_frame.eid_filter & 0x00FFUL) >> 8);        // RXFnSEID8
-            filterSpiBuffer[3] = (uint8_t) (filter->filter.extended_frame.eid_filter & 0x00FFUL);               // RXFnSEID0
+        case MCP2515_FILTER_EXTENDED_FRAME: {
+            //
+            // Extended frame mode - The filter applies to the full 29-bit extended frame ID
+            //
+            
+            // Fill in RXFnSIDH RXFnSIDL RXFnSEID8 RXFnSEID0 in filterSpiBuffer[0..3]
+            encode_canid_into_mcp2515_registers_private(filter->filter.extended_frame.eid_filter, true, filterSpiBuffer);
 
-            maskSpiBuffer[0] = (uint8_t) ((filter->filter.extended_frame.eid_mask & 0x1FFC0000UL) >> 18);       // RXMnSIDH
-            maskSpiBuffer[1] = (uint8_t) (((filter->filter.extended_frame.eid_mask & 0xE00000UL) >> 11) |  
-                                          ((filter->filter.extended_frame.eid_mask & 0x030000UL) >> 16));       // RXMnSIDL
-            maskSpiBuffer[2] = (uint8_t) ((filter->filter.extended_frame.eid_mask & 0x00FFUL) >> 8);            // RXMnEID8
-            maskSpiBuffer[3] = (uint8_t) (filter->filter.extended_frame.eid_mask & 0x00FFUL);                   // RXMnEID0
-            break;
+            // Fill in RXMnSIDH RXMnSIDL RXMnEID8 RXMnEID0 in maskSpiBuffer[0..3]
+            // NOTE: The encoding function will set RXMnSIDL[3] to 1 - This is OK because MCP2515 ignores RXMnSIDL[3] (Marked as 'Not Implemented') 
+            encode_canid_into_mcp2515_registers_private(filter->filter.extended_frame.eid_mask, true, maskSpiBuffer);
+
+            // TODO: Remove when the new implmentation is confirmed to work
+            // uint32_t eidFilter = filter->filter.extended_frame.eid_filter;
+            // uint32_t eidMask = filter->filter.extended_frame.eid_mask;
+            // filterSpiBuffer[0] = (uint8_t) ((eidFilter & 0x1FFC0000UL) >> 18);                                            // RXFnSIDH
+            // filterSpiBuffer[1] = (uint8_t) (((eidFilter & 0xE00000UL) >> 11) | 8 | ((eidFilter & 0x030000UL) >> 16));     // RXFnSIDL
+            // filterSpiBuffer[2] = (uint8_t) ((eidFilter & 0x00FFUL) >> 8);                                                 // RXFnSEID8
+            // filterSpiBuffer[3] = (uint8_t) (eidFilter & 0x00FFUL);                                                        // RXFnSEID0
+
+            // maskSpiBuffer[0] = (uint8_t) ((eidMask & 0x1FFC0000UL) >> 18);                                                // RXMnSIDH
+            // maskSpiBuffer[1] = (uint8_t) (((eidMask & 0xE00000UL) >> 11) | ((eidMask & 0x030000UL) >> 16));               // RXMnSIDL
+            // maskSpiBuffer[2] = (uint8_t) ((eidMask & 0x00FFUL) >> 8);                                                     // RXMnEID8
+            // maskSpiBuffer[3] = (uint8_t) (eidMask & 0x00FFUL);                                                            // RXMnEID0
+            // TODO: END
+        }
+        break;
             
         default:
             return ESP_ERR_INVALID_ARG;

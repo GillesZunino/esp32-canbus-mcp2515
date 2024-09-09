@@ -36,6 +36,12 @@ typedef struct mcp2515_spi_config {
     int queue_size;                     ///< SPI transaction queue size. See 'spi_device_queue_trans()'
 } mcp2515_spi_config_t;
 
+
+
+#define MCP2515_INTERUPTS_DISABLE 0
+
+
+
 /**
  * @brief Configuration of MCP2515 device.
  */
@@ -199,8 +205,8 @@ typedef enum {
  * @brief MCP2515 filter / mask mode.
  */
 typedef enum {
-    MCP2515_FILTER_STANDARD_FRAME = 1,
-    MCP2515_FILTER_EXTENDED_FRAME = 2
+    MCP2515_FILTER_STANDARD_FRAME = 1,  ///< Receive filter applies to standard frames only
+    MCP2515_FILTER_EXTENDED_FRAME = 2   ///< Receive filter applies to extended frames only
 } mcp2515_filter_mode_t;
 
 /**
@@ -209,16 +215,16 @@ typedef enum {
 typedef struct mcp2515_receive_filter {
     mcp2515_RXFn_t rxfn;                ///< Receive filter to configure (RFX0 ... RFX5)
     mcp2515_filter_mode_t mode;         ///< Filter applies to standard frames only or extended frames only             
-    union {                             ///< Filter
+    union {                             ///< Filter definition
         struct {
             uint16_t id_filter;         ///< Standard ID filter. Only the least significant 11 bits are used
             uint16_t id_mask;           ///< Standard ID mask. Only the lesat significant 11 bits are used
             uint16_t data_filter;       ///< Data filter. The MSB applies to frame data[0] and LSB applied to frame data[1]
-            uint16_t data_mask;         ///< Data mask.
+            uint16_t data_mask;         ///< Data mask. The MSB applies to frame data[0] and LSB applied to frame data[1]
         } standard_frame;
 
         struct {
-            uint32_t eid_filter;        ///< Exrtended ID filter. Only the least significant 29 bits are used
+            uint32_t eid_filter;        ///< Extended ID filter. Only the least significant 29 bits are used
             uint32_t eid_mask;          ///< Extended ID mask. Only the least significant 29 bits are used
         } extended_frame;
     } filter __attribute__((__packed__));

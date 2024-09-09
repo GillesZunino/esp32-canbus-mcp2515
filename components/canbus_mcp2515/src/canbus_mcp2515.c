@@ -11,6 +11,8 @@
 #include "canbus_mcp2515_types.h"
 #include "canbus_mcp2515.h"
 
+#include "canid_mcp2515_coding_private.h"
+
 
 #ifdef CONFIG_MCP2515_ISR_IN_IRAM
 #define MCP2515_MALLOC_CAPS    (MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)
@@ -571,33 +573,7 @@ esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, boo
 
 
 
-FORCE_INLINE_ATTR uint8_t internal_get_sid10_to_sid3_from_standard_id(const uint32_t id) {
-    return ((id & CAN_SFF_MASK) >> 3) & 0xFF;
-}
 
-FORCE_INLINE_ATTR uint8_t internal_get_sid10_to_sid3_from_extended_id(const uint32_t id) {
-    return ((id &0x1F000000) >> 21) | ((id & 0xE00000) >> 21);
-}
-
-FORCE_INLINE_ATTR uint8_t internal_get_sid2_to_sid0_from_standard_id(const uint32_t id) {
-    return (id & CAN_SFF_MASK) & 0x07;
-}
-
-FORCE_INLINE_ATTR uint8_t internal_get_sid2_to_sid0_from_extended_id(const uint32_t id) {
-    return (id & 0x1C0000) >> 18;
-}
-
-FORCE_INLINE_ATTR uint32_t internal_get_eid17_to_eid16(const uint32_t id) {
-    return ((id & CAN_EFF_MASK) >> 16) & 0x03;
-}
-
-FORCE_INLINE_ATTR uint32_t internal_get_eid15_to_eid8(const uint32_t id) {
-    return ((id & CAN_EFF_MASK) >> 8) & 0xFF;
-}
-
-FORCE_INLINE_ATTR uint32_t internal_get_eid7_to_eid0(const uint32_t id) {
-    return (id & CAN_EFF_MASK) & 0xFF;
-}
 
 
 
@@ -697,23 +673,24 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     // Set priority via TXP[1:0] (TXBnCTRL) - We leave TXREQ[3] (TXBnCTRL) set to false as we will send the RTS SPI command when all bufers have been loaded 
     transmitBuffer[0] = options->priority & 0x03;
 
-    // Prepare Standard ID - TXBnSIDH and TXBnSIDL
-    transmitBuffer[1] = isExtendedFrame ? internal_get_sid10_to_sid3_from_extended_id(frame->id) : internal_get_sid10_to_sid3_from_standard_id(frame->id);
-    transmitBuffer[2] = isExtendedFrame ? (internal_get_sid2_to_sid0_from_extended_id(frame->id) << 5) | (0x08 | internal_get_eid17_to_eid16(frame->id)) : (internal_get_sid2_to_sid0_from_standard_id(frame->id) << 5);
+    // Encode id into MCP2515 registers TXBnSIDH TXBnSIDL and TXBnEID8 TXBnEID0 if extended frame id
+    encode_canid_into_mcp2515_registers_private(frame->id, isExtendedFrame, &transmitBuffer[1]);
+    // TODO: Verify
+    // // Prepare Standard ID - TXBnSIDH and TXBnSIDL
+    // transmitBuffer[1] = isExtendedFrame ? internal_get_sid10_to_sid3_from_extended_id(frame->id) : internal_get_sid10_to_sid3_from_standard_id(frame->id);
+    // transmitBuffer[2] = isExtendedFrame ? (internal_get_sid2_to_sid0_from_extended_id(frame->id) << 5) | (0x08 | internal_get_eid17_to_eid16(frame->id)) : (internal_get_sid2_to_sid0_from_standard_id(frame->id) << 5);
 
-    // Prepare Extended ID configuration
-    if (isExtendedFrame) {
-        // TXBnEID8 and TXBnEID0
-        transmitBuffer[3] = internal_get_eid15_to_eid8(frame->id); 
-        transmitBuffer[4] = internal_get_eid7_to_eid0(frame->id);
-    }
-
+    // // Prepare Extended ID - TXBnEID8 and TXBnEID0
+    // if (isExtendedFrame) {
+    //     transmitBuffer[3] = internal_get_eid15_to_eid8(frame->id); 
+    //     transmitBuffer[4] = internal_get_eid7_to_eid0(frame->id);
+    // }
+    // TODO: END
     // Data length - TXBnDLC
     transmitBuffer[isExtendedFrame ? 5 : 3] = frame->dlc;
 
-    // Copy data
+    // Copy data to TXBnDm
     if (frame->dlc > 0) {
-        // TXBnDm
         memcpy(&transmitBuffer[cmdCount], frame->data, frame->dlc);
     }
 
@@ -819,17 +796,20 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
 
         frame->options = (isRtr ? CAN_FRAME_OPTION_RTR : 0) | (isExtendedFrame ? CAN_FRAME_OPTION_EXTENDED : 0);
 
-        if (isExtendedFrame) {
-            // Extended frame ID from RXBnSIDH RXBnSIDL  
-            frame->id = (((uint32_t) receiveRegisters[1]) << 21) | 
-                        (((((uint32_t) receiveRegisters[2]) & 0xE0) >> 5) << 18) | ((((uint32_t) receiveRegisters[2]) & 0x03) << 16) | 
-                        //               RXBnEID8                                 RXBnEID0
-                        (((uint32_t) receiveRegisters[3]) << 8) | ((uint32_t) receiveRegisters[4]);
-        } else {
-            // Standard frame ID from RXBnSIDH RXBnSIDL
-            frame->id = (((uint32_t) receiveRegisters[1]) << 3) | ((((uint32_t) receiveRegisters[2]) & 0xE0) >> 5);
-        }
-
+        // Decode frame id from RXBnSIDH RXBnSIDL and RXBnSIDH RXBnSIDL if extended frame id
+        frame->id = decode_canid_from_mcp2515_registers_private(isExtendedFrame, &receiveRegisters[1]);
+        // TODO: Make sure this works
+        // if (isExtendedFrame) {
+        //     // Extended frame ID from RXBnSIDH RXBnSIDL  
+        //     frame->id = (((uint32_t) receiveRegisters[1]) << 21) | 
+        //                 (((((uint32_t) receiveRegisters[2]) & 0xE0) >> 5) << 18) | ((((uint32_t) receiveRegisters[2]) & 0x03) << 16) | 
+        //                 //               RXBnEID8                                 RXBnEID0
+        //                 (((uint32_t) receiveRegisters[3]) << 8) | ((uint32_t) receiveRegisters[4]);
+        // } else {
+        //     // Standard frame ID from RXBnSIDH RXBnSIDL
+        //     frame->id = (((uint32_t) receiveRegisters[1]) << 3) | ((((uint32_t) receiveRegisters[2]) & 0xE0) >> 5);
+        // }
+        // TODO: END
         // Populate frame data
         frame->dlc = receiveRegisters[5] & 0x0F;
         memcpy(frame->data, frameData, frame->dlc);

@@ -2,6 +2,7 @@ set(srcs
     "src/canbus_mcp2515.c"
     "src/canbus_mcp2515_isr.c"
     "src/canbus_mcp2515_utils.c"
+    "src/canid_mcp2515_coding_private.c"
 )
 
 idf_component_register(SRCS ${srcs}

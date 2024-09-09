@@ -404,12 +404,14 @@ esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool e
 esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const mcp2515_bit_timing_config_t* bitTimingConfig);
 
 /**
- * @brief Set MCP2515 receive filter(s).
+ * @brief Set MCP2515 receive filter and mask.
  * @note Filters apply to both standard and extended frames as follows:
- *        * Standard: mask and filter (16 bits) apply to the Data bytes 01 and 1
- *        * Extended: mask and filter (29 bits) apply to the entire Extended ID field
+ *        * Standard mode: mask and filter apply to the Standard ID (11 bits) and Data bytes 0 and 1
+ *        * Extended mode: mask and filter apply to the entire Extended ID field (29 bits)
+ * @attention The MCP2515 shares one mask RXM0 between filters RXF0 and RXF1 and another mask RXM1 shared between RXF2, RXF3, RXF4 and RXF5.
+ *            Every call to this function applies the mask configuration and can overwrite previously configured masks.
  * @param handle   Handle of the MCP2515 device
- * @param filter   Filter
+ * @param filter   Filter to configure
  */
 esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle, const mcp2515_receive_filter_t* filter);
 

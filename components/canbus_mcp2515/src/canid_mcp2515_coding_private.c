@@ -41,11 +41,11 @@ FORCE_INLINE_ATTR uint32_t internal_get_eid7_to_eid0(const uint32_t id) {
 
 
 void encode_canid_into_mcp2515_registers_private(uint32_t id, bool isExtendedFrame, uint8_t buffer[4]) {
-    // Prepare Standard ID - TXBnSIDH and TXBnSIDL
+    // Prepare Standard ID - (TXBnSIDH and TXBnSIDL) or (RXFnSIDH and RXFnSIDL)
     buffer[0] = isExtendedFrame ? internal_get_sid10_to_sid3_from_extended_id(id) : internal_get_sid10_to_sid3_from_standard_id(id);
     buffer[1] = isExtendedFrame ? (internal_get_sid2_to_sid0_from_extended_id(id) << 5) | (0x08 | internal_get_eid17_to_eid16(id)) : (internal_get_sid2_to_sid0_from_standard_id(id) << 5);
 
-    // Prepare Extended ID - TXBnEID8 and TXBnEID0
+    // Prepare Extended ID - (TXBnEID8 and TXBnEID0) or (RXFnEID8 and RXFnEID0)
     if (isExtendedFrame) {
         buffer[2] = internal_get_eid15_to_eid8(id); 
         buffer[3] = internal_get_eid7_to_eid0(id);

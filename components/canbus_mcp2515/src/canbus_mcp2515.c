@@ -331,37 +331,10 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
     mcp2515_register_t maskRegister = (filter->rxfn == RXF0) || (filter->rxfn == RXF1) ? MCP2515_RXM0SIDH : MCP2515_RXM1SIDH;
 
     // Select the filter registers to load for the requested filter
-    mcp2515_register_t filterRegister;
-    switch (filter->rxfn) {
-        case RXF0:
-            filterRegister = MCP2515_RXF0SIDH;
-            break;
+    const mcp2515_register_t RXFnToMCP2515Register[] = { MCP2515_RXF0SIDH, MCP2515_RXF1SIDH, MCP2515_RXF2SIDH, MCP2515_RXF3SIDH, MCP2515_RXF4SIDH, MCP2515_RXF5SIDH };
+    mcp2515_register_t filterRegister = RXFnToMCP2515Register[filter->rxfn];
 
-        case RXF1:
-            filterRegister = MCP2515_RXF1SIDH;
-            break;
-
-        case RXF2:
-            filterRegister = MCP2515_RXF2SIDH;
-            break;
-
-        case RXF3:
-            filterRegister = MCP2515_RXF3SIDH;
-            break;
-
-        case RXF4:
-            filterRegister = MCP2515_RXF4SIDH;
-            break;
-
-        case RXF5:
-            filterRegister = MCP2515_RXF5SIDH;
-            break;
-
-        default:
-            return ESP_ERR_INVALID_ARG;
-    }
-
-    uint8_t count = 4;
+    const uint8_t count = 4;
     WORD_ALIGNED_ATTR uint8_t filterSpiBuffer[count];
     WORD_ALIGNED_ATTR uint8_t maskSpiBuffer[count];
 
@@ -384,22 +357,6 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
             // ... RXMnEID8 and RXMnEID0 with the data mask portion in maskSpiBuffer[2..3]
             maskSpiBuffer[2] = (uint8_t) ((filter->filter.standard_frame.data_mask & 0xFF00) >> 8);
             maskSpiBuffer[3] = (uint8_t) (filter->filter.standard_frame.data_mask & 0x00FF);
-
-            // TODO: Remove when the new implmentation is confirmed to work
-            // uint16_t idFilter = filter->filter.standard_frame.id_filter;
-            // uint16_t dataFilter = filter->filter.standard_frame.data_filter;
-            // filterSpiBuffer[0] = (uint8_t) ((idFilter >> 3) & 0x00FF);           // RXFnSIDH
-            // filterSpiBuffer[1] = (uint8_t)((idFilter & 0x0007) << 3);            // RXFnSIDL
-            // filterSpiBuffer[2] = (uint8_t) ((dataFilter & 0xFF00) >> 8);         // RXFnSEID8
-            // filterSpiBuffer[3] = (uint8_t) (dataFilter & 0x00FF);                // RXFnSEID0
-    
-            // uint16_t idMask = filter->filter.standard_frame.id_mask;
-            // uint16_t dataMask = filter->filter.standard_frame.data_mask;
-            // maskSpiBuffer[0] = (uint8_t) ((idMask >> 3) & 0x00FF);               // RXMnSIDH
-            // maskSpiBuffer[1] = (uint8_t) ((idMask & 0x0007) << 3);               // RXMnSIDL
-            // maskSpiBuffer[2] = (uint8_t) ((dataMask & 0xFF00) >> 8);             // RXMnEID8
-            // maskSpiBuffer[3] = (uint8_t) (dataMask & 0x00FF);                    // RXMnEID0
-            // TODO: END
         }
         break;
         
@@ -414,20 +371,6 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
             // Fill in RXMnSIDH RXMnSIDL RXMnEID8 RXMnEID0 in maskSpiBuffer[0..3]
             // NOTE: The encoding function will set RXMnSIDL[3] to 1 - This is OK because MCP2515 ignores RXMnSIDL[3] (Marked as 'Not Implemented') 
             encode_canid_into_mcp2515_registers_private(filter->filter.extended_frame.eid_mask, true, maskSpiBuffer);
-
-            // TODO: Remove when the new implmentation is confirmed to work
-            // uint32_t eidFilter = filter->filter.extended_frame.eid_filter;
-            // uint32_t eidMask = filter->filter.extended_frame.eid_mask;
-            // filterSpiBuffer[0] = (uint8_t) ((eidFilter & 0x1FFC0000UL) >> 18);                                            // RXFnSIDH
-            // filterSpiBuffer[1] = (uint8_t) (((eidFilter & 0xE00000UL) >> 11) | 8 | ((eidFilter & 0x030000UL) >> 16));     // RXFnSIDL
-            // filterSpiBuffer[2] = (uint8_t) ((eidFilter & 0x00FFUL) >> 8);                                                 // RXFnSEID8
-            // filterSpiBuffer[3] = (uint8_t) (eidFilter & 0x00FFUL);                                                        // RXFnSEID0
-
-            // maskSpiBuffer[0] = (uint8_t) ((eidMask & 0x1FFC0000UL) >> 18);                                                // RXMnSIDH
-            // maskSpiBuffer[1] = (uint8_t) (((eidMask & 0xE00000UL) >> 11) | ((eidMask & 0x030000UL) >> 16));               // RXMnSIDL
-            // maskSpiBuffer[2] = (uint8_t) ((eidMask & 0x00FFUL) >> 8);                                                     // RXMnEID8
-            // maskSpiBuffer[3] = (uint8_t) (eidMask & 0x00FFUL);                                                            // RXMnEID0
-            // TODO: END
         }
         break;
             
@@ -834,29 +777,22 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
         memcpy(frame->data, frameData, frame->dlc);
 
         //
-        // Populate filters hit - A filter can only be hit if:
-        //  * The MCP2515 is not in 'special receive' mode (RXBnCTRL[6:5] not 11)
-        //  * At least one filter was configured for the receive register being processed
+        // Populate filters hit - A filter can only be hit if the MCP2515 is not in 'special receive' mode (RXBnCTRL[6:5] not 11)
+        // NOTE: The MCP1515 does not offer a way to disable filtering and a filter is always hit when a frame is received
+        //       It is possible to set RXMn to 0 to indicate that no bit in the filter matter and accept any valid message
         // NOTE: In rollover mode, RXF0 might be hit even though we are processing RXB1
         //
         bool filtersArmed = ((receiveRegisters[0] & 0x60) != 0x60);
         if (filtersArmed) {
             switch (controlRegister) {
-                // TODO: Check if receive anything mode needs to be configured in both RXB0CTRL and RXB1CTRL or only in 0 or 1
-                // TODO: Remember if there were filters applied to this register
-                // TODO: Filters cannot be hit when there are not filters configured
                 case MCP2515_RXB0CTRL:
                     // RXB0 has two receive filters RXF0 and RXF1 - RXB0CTRL[0] is 1 for RXF1 and 0 for RXF0
-                    filtersHit->flags = (receiveRegisters[0] & 0x01) ? 0x02 : 0x01;
+                    filtersHit->flags = 1 << (receiveRegisters[0] & 0x01);
                     break;
 
                 case MCP2515_RXB1CTRL:
                     // RXB1 has four receive filters RXF2 to RXF5. In addition, when in rollover mode, RXF0 and RXF1 can also be hit
-                    // TODO:This is not the correct way of returnig filters hit based on the mcp2515_receive_filter_hit_t union
-                    // TODO: Check if receive anything mode needs to be configured in both RXB0CTRL and RXB1CTRL or only in 0 or 1
-                    // TODO: Remember if there were filters applied to this register or in RXB0, and in rollover mode
-                    // TODO: BUG: Filters cannot be hit when there are not filters configured
-                    filtersHit->flags = (receiveRegisters[0] & 0x07);
+                    filtersHit->flags = 1 << (receiveRegisters[0] & 0x07);
                     break;
 
                 default:
@@ -881,7 +817,6 @@ esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle,
 esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, eflg_t* flags) {
     return mcp2515_read_register(handle, MCP2515_EFLG, &flags->flags);
 }
-
 
 
 

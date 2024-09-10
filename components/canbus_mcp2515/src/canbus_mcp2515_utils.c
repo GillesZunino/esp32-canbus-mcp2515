@@ -251,6 +251,33 @@ void log_txbnctrl_internal(const char* tag, uint8_t txbnctrl, esp_log_level_t lo
         txbnctrl & (1 << 0) ? "x" : " ");
 }
 
+void log_rxbn_filters_hit_internal(const char* tag, uint8_t filtersHit, mcp2515_receive_buffer_t receiveBuffer, esp_log_level_t log_level) {
+    mcp2515_receive_filter_hit_t filtersHitUnion =  { .flags = filtersHit };
+    ESP_LOG_LEVEL(log_level, tag, "|          FLT: 0x%02X          |", filtersHit);
+    switch (receiveBuffer) {
+        case MCP2515_RECEIVE_RXB0:
+            ESP_LOG_LEVEL(log_level, tag, "|  RXB0   |        RXB1       |");
+            ESP_LOG_LEVEL(log_level, tag, "|RXF0|RXF1|                   |");
+            ESP_LOG_LEVEL(log_level, tag, "| %s  | %s  |                   |",
+                filtersHitUnion.filters.rxf0 ? "x" : " ",
+                filtersHitUnion.filters.rxf1 ? "x" : " ");
+            break;
+
+        case MCP2515_RECEIVE_RXB1:
+            ESP_LOG_LEVEL(log_level, tag, "|  RXB0   |        RXB1       |");
+            ESP_LOG_LEVEL(log_level, tag, "|         |RXF2|RXF3|RXF4|RXF5|");
+            ESP_LOG_LEVEL(log_level, tag, "|         | %s  | %s  | %s  | %s  |", 
+                filtersHitUnion.filters.rxf2 ? "x" : " ",
+                filtersHitUnion.filters.rxf3 ? "x" : " ",
+                filtersHitUnion.filters.rxf4 ? "x" : " ",
+                filtersHitUnion.filters.rxf5 ? "x" : " ");
+            break;
+
+        default:
+            ESP_LOG_LEVEL(log_level, tag, "|       UNKNOWN REGISTER      |");
+    }
+}
+
 void log_rxb0ctrl_internal(const char* tag, uint8_t rxb0ctrl, esp_log_level_t log_level) {
     ESP_LOG_LEVEL(log_level, tag, "|               RXB0CTRL: 0x%02X               |", rxb0ctrl);
     ESP_LOG_LEVEL(log_level, tag, "| -- |RXM1|RXM0| -- |RXRTR|BUKT|BUKT1|CLKPRE0|");

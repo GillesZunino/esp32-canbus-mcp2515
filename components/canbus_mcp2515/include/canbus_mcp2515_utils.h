@@ -139,6 +139,34 @@ extern "C" {
         } \
     } while(0)
 
+/**
+ * @brief Displays the set of receive filters hit for RXB0 to the log at specified level.
+ *
+ * @param tag description tag
+ * @param filtersHit Filters hit bits to log
+ * @param level level of the log
+ */
+#define MCP2515_LOG_RXB0_FILTERS_HIT( tag, filtersHit, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_rxbn_filters_hit_internal(tag, filtersHit, MCP2515_RECEIVE_RXB0, level); \
+        } \
+    } while(0)
+
+/**
+ * @brief Displays the set of receive filters hit for RXB1 to the log at specified level.
+ *
+ * @param tag description tag
+ * @param filtersHit Filters hit bits to log
+ * @param level level of the log
+ */
+#define MCP2515_LOG_RXB1_FILTERS_HIT( tag, filtersHit, level ) \
+    do { \
+        if ( LOG_LOCAL_LEVEL >= (level) ) { \
+            log_rxbn_filters_hit_internal(tag, filtersHit, MCP2515_RECEIVE_RXB1, level); \
+        } \
+    } while(0)
+
 
 
 const char* dump_blt_mode(canbus_mcp2515_blt_mode_t mode);
@@ -165,6 +193,8 @@ void log_eflg_internal(const char* tag, uint8_t eflg, esp_log_level_t log_level)
 void log_canstat_internal(const char* tag, uint8_t canstat, esp_log_level_t log_level);
 void log_canctrl_internal(const char* tag, uint8_t canctrl, esp_log_level_t log_level);
 void log_txbnctrl_internal(const char* tag, uint8_t txbnctrl, esp_log_level_t log_level);
+
+void log_rxbn_filters_hit_internal(const char* tag, uint8_t filtersHit, mcp2515_receive_buffer_t receiveBuffer, esp_log_level_t log_level);
 
 void log_rxb0ctrl_internal(const char* tag, uint8_t rxb0ctrl, esp_log_level_t log_level);
 void log_rxb1ctrl_internal(const char* tag, uint8_t rxb1ctrl, esp_log_level_t log_level);

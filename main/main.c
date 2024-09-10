@@ -190,7 +190,7 @@ void app_main(void) {
     ESP_ERROR_CHECK(canbus_mcp2515_set_mode(can_mcp2515_handle, MCP2515_MODE_LOOPBACK, 50));
 
     // Send a few frames to see the effect of receive filtering
-    const uint16_t NumberOfFramesToSend = 20;
+    const uint16_t NumberOfFramesToSend = 10;
     const TickType_t DelayBetweenFrames = pdMS_TO_TICKS(1000);
 
     uint8_t framesSent = 0;
@@ -233,6 +233,7 @@ void app_main(void) {
             };
 
             ESP_LOGI(TAG, "Sending frame with index %d", framesSent);
+            MCP2515_LOG_CAN_FRAME(TAG, pCanFrame, ESP_LOG_INFO);
             esp_err_t err = canbus_mcp2515_transmit(can_mcp2515_handle, pCanFrame, &sendOptions, &effectiveTransmitRegister);
             if (err == ESP_OK) {
                 ESP_LOGI(TAG, "Sent frame with index %d using register '%s'", framesSent, dump_TXBn(effectiveTransmitRegister));
@@ -276,6 +277,8 @@ void app_main(void) {
             if (canintf.bits.rx0if) {
                 ESP_LOGI(TAG, "Reading frame from RXB0");
                 ESP_ERROR_CHECK(canbus_mcp2515_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB0, &receivedFrameRxb0, &filtersHitRxb0));
+                MCP2515_LOG_CAN_FRAME(TAG, &receivedFrameRxb0, ESP_LOG_INFO);
+                MCP2515_LOG_RXB0_FILTERS_HIT(TAG, filtersHitRxb0.flags, ESP_LOG_INFO);
 
                 ESP_LOGI(TAG, "Clearing RX0IF in CANINTF");
                 ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_RX0_MSG_RECEIVED));
@@ -284,6 +287,8 @@ void app_main(void) {
             if (canintf.bits.rx1if) {
                 ESP_LOGI(TAG, "Reading frame from RXB1");
                 ESP_ERROR_CHECK(canbus_mcp2515_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB1, &receivedFrameRxb1, &filtersHitRxb1));
+                MCP2515_LOG_CAN_FRAME(TAG, &receivedFrameRxb1, ESP_LOG_INFO);
+                MCP2515_LOG_RXB1_FILTERS_HIT(TAG, filtersHitRxb0.flags, ESP_LOG_INFO);
 
                 ESP_LOGI(TAG, "Clearing RX1IF in CANINTF");
                 ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_RX1_MSG_RECEIVED));            

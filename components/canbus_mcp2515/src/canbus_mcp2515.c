@@ -549,15 +549,13 @@ esp_err_t canbus_mcp2515_set_receive_rollover(canbus_mcp2515_handle_t handle, bo
     return mcp2515_modify_register(handle, MCP2515_RXB0CTRL, enableRollover ? 0x04 : 0x00, 0x04);
 }
 
-esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, bool enableSpecialReceive) {
-    return mcp2515_modify_register(handle, MCP2515_RXB0CTRL, enableSpecialReceive ? 0x60 : 0x00, 0x60);
+esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, mcp2515_receive_buffer_t receiveBuffer, bool enableSpecialReceive) {
+    if ((receiveBuffer != MCP2515_RECEIVE_RXB0) && (receiveBuffer != MCP2515_RECEIVE_RXB0)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    mcp2515_register_t rxbnctrl = MCP2515_RECEIVE_RXB0 ? MCP2515_RXB0CTRL : MCP2515_RXB1CTRL;
+    return mcp2515_modify_register(handle, rxbnctrl, enableSpecialReceive ? 0x60 : 0x00, 0x60);
 }
-
-
-
-
-
-
 
 esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_frame_t* frame, const mcp2515_transmit_options_t* options, mcp2515_TXBn_t* effectiveTXB) {
     // TODO: Validate handle

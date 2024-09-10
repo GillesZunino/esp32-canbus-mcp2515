@@ -179,8 +179,9 @@ void app_main(void) {
     };
 
     // Configure 'special receive mode' for debugging
-    ESP_LOGI(TAG, "Configure MCP2515 'special receive mode'");
-    ESP_ERROR_CHECK(canbus_mcp2515_set_special_receive(can_mcp2515_handle, true));
+    ESP_LOGI(TAG, "Configure MCP2515 'special receive mode' for RXB0 and RXB1");
+    ESP_ERROR_CHECK(canbus_mcp2515_set_special_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB0, true));
+    ESP_ERROR_CHECK(canbus_mcp2515_set_special_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB1, true));
 
     // Enable rollover mode
     ESP_LOGI(TAG, "Configure MCP2515 receive rollover");

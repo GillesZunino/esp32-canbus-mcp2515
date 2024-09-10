@@ -475,9 +475,10 @@ esp_err_t canbus_mcp2515_set_receive_rollover(canbus_mcp2515_handle_t handle, bo
  *       EOF, that portion of the message assembled in the MAB, before the error frame, will be loaded into the buffer.
  *       Special receive mode is intended for debugging and is not used in normal operation.
  * @param handle                  Handle of the MCP2515 device
+ * @param receiveBuffer           Receive buffer to configure
  * @param enableSpecialReceive    true to enable special receive mode, false to disable
  */
-esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, bool enableSpecialReceive);
+esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, mcp2515_receive_buffer_t receiveBuffer, bool enableSpecialReceive);
 
 /**
  * @brief Transmit an MCP2515 register.

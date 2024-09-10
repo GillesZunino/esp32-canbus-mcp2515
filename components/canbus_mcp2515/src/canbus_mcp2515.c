@@ -833,20 +833,35 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
         frame->dlc = receiveRegisters[5] & 0x0F;
         memcpy(frame->data, frameData, frame->dlc);
 
-        // Populate filters hit
-        switch (controlRegister) {
-            case MCP2515_RXB0CTRL:
-                // RXB0 has two receive filters RXF0 and RXF1
-                filtersHit->flags = (receiveRegisters[0] & 0x01);
-                break;
+        //
+        // Populate filters hit - A filter can only be hit if:
+        //  * The MCP2515 is not in 'special receive' mode (RXBnCTRL[6:5] not 11)
+        //  * At least one filter was configured for the receive register being processed
+        // NOTE: In rollover mode, RXF0 might be hit even though we are processing RXB1
+        //
+        bool filtersArmed = ((receiveRegisters[0] & 0x60) != 0x60);
+        if (filtersArmed) {
+            switch (controlRegister) {
+                // TODO: Check if receive anything mode needs to be configured in both RXB0CTRL and RXB1CTRL or only in 0 or 1
+                // TODO: Remember if there were filters applied to this register
+                // TODO: Filters cannot be hit when there are not filters configured
+                case MCP2515_RXB0CTRL:
+                    // RXB0 has two receive filters RXF0 and RXF1 - RXB0CTRL[0] is 1 for RXF1 and 0 for RXF0
+                    filtersHit->flags = (receiveRegisters[0] & 0x01) ? 0x02 : 0x01;
+                    break;
 
-            case MCP2515_RXB1CTRL:
-                // RXB1 has four receive filters RXF2 to RXF5. In addition, when in rollover mode, RXF0 and RXF1 can also be hit
-                filtersHit->flags = (receiveRegisters[0] & 0x07);
-                break;
+                case MCP2515_RXB1CTRL:
+                    // RXB1 has four receive filters RXF2 to RXF5. In addition, when in rollover mode, RXF0 and RXF1 can also be hit
+                    // TODO:This is not the correct way of returnig filters hit based on the mcp2515_receive_filter_hit_t union
+                    // TODO: Check if receive anything mode needs to be configured in both RXB0CTRL and RXB1CTRL or only in 0 or 1
+                    // TODO: Remember if there were filters applied to this register or in RXB0, and in rollover mode
+                    // TODO: BUG: Filters cannot be hit when there are not filters configured
+                    filtersHit->flags = (receiveRegisters[0] & 0x07);
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
         }
     }
 

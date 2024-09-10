@@ -200,7 +200,7 @@ void app_main(void) {
     uint8_t rx1Counter = 0;
     do {
         // Send a frame if necessary
-        if (framesSent <= NumberOfFramesToSend) {
+        if (framesSent < NumberOfFramesToSend) {
             can_frame_t* pCanFrame = NULL;
 
             framesSent++;
@@ -288,7 +288,7 @@ void app_main(void) {
                 ESP_LOGI(TAG, "Reading frame from RXB1");
                 ESP_ERROR_CHECK(canbus_mcp2515_receive(can_mcp2515_handle, MCP2515_RECEIVE_RXB1, &receivedFrameRxb1, &filtersHitRxb1));
                 MCP2515_LOG_CAN_FRAME(TAG, &receivedFrameRxb1, ESP_LOG_INFO);
-                MCP2515_LOG_RXB1_FILTERS_HIT(TAG, filtersHitRxb0.flags, ESP_LOG_INFO);
+                MCP2515_LOG_RXB1_FILTERS_HIT(TAG, filtersHitRxb1.flags, ESP_LOG_INFO);
 
                 ESP_LOGI(TAG, "Clearing RX1IF in CANINTF");
                 ESP_ERROR_CHECK(canbus_mcp2515_reset_interrupt_flags(can_mcp2515_handle, MCP2515_INTERRUPT_RX1_MSG_RECEIVED));            

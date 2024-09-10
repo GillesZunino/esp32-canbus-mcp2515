@@ -263,10 +263,13 @@ void log_rxbn_filters_hit_internal(const char* tag, uint8_t filtersHit, mcp2515_
                 filtersHitUnion.filters.rxf1 ? "x" : " ");
             break;
 
+        // In rollover mode, RXB1 can indicate a filter hit of RXF0 or RXF1 if the message was rolled over
         case MCP2515_RECEIVE_RXB1:
             ESP_LOG_LEVEL(log_level, tag, "|  RXB0   |        RXB1       |");
-            ESP_LOG_LEVEL(log_level, tag, "|         |RXF2|RXF3|RXF4|RXF5|");
-            ESP_LOG_LEVEL(log_level, tag, "|         | %s  | %s  | %s  | %s  |", 
+            ESP_LOG_LEVEL(log_level, tag, "|RXF0|RXF1|RXF2|RXF3|RXF4|RXF5|");
+            ESP_LOG_LEVEL(log_level, tag, "| %s  | %s  | %s  | %s  | %s  | %s  |",
+                filtersHitUnion.filters.rxf0 ? "x" : " ",
+                filtersHitUnion.filters.rxf1 ? "x" : " ",
                 filtersHitUnion.filters.rxf2 ? "x" : " ",
                 filtersHitUnion.filters.rxf3 ? "x" : " ",
                 filtersHitUnion.filters.rxf4 ? "x" : " ",

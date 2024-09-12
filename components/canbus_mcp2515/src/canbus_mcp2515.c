@@ -550,7 +550,7 @@ esp_err_t canbus_mcp2515_set_receive_rollover(canbus_mcp2515_handle_t handle, bo
 }
 
 esp_err_t canbus_mcp2515_set_special_receive(canbus_mcp2515_handle_t handle, mcp2515_receive_buffer_t receiveBuffer, bool enableSpecialReceive) {
-    if ((receiveBuffer != MCP2515_RECEIVE_RXB0) && (receiveBuffer != MCP2515_RECEIVE_RXB0)) {
+    if ((receiveBuffer != MCP2515_RECEIVE_RXB0) && (receiveBuffer != MCP2515_RECEIVE_RXB1)) {
         return ESP_ERR_INVALID_ARG;
     }
     mcp2515_register_t rxbnctrl = MCP2515_RECEIVE_RXB0 ? MCP2515_RXB0CTRL : MCP2515_RXB1CTRL;

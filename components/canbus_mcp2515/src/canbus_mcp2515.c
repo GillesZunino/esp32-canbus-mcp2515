@@ -11,6 +11,7 @@
 #include "canbus_mcp2515_types.h"
 #include "canbus_mcp2515.h"
 
+#include "canbus_mcp2515_private.h"
 #include "canid_mcp2515_coding_private.h"
 
 
@@ -23,12 +24,6 @@
 
 static const char* CanBusMCP2515LogTag = "canbus-mcp2515";
 
-typedef struct canbus_mcp2515 {
-    mcp2515_bit_timing_config_t bit_timing_config;
-    mcp2515_rxnbf_pins_config_t rxnbf_config;
-    mcp2515_interrupt_config_t interrupt_config;
-    spi_device_handle_t spi_device_handle;
-} canbus_mcp2515_t;
 
 
 static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config);

@@ -19,16 +19,19 @@ const char* TAG = "mcp2515_main";
 //  * When using GPIO Matrix routing, the SPI bus speed is limited to 20 MHz and it may be necessary to adjust spi_device_interface_config_t::input_delay_ns (MISO_INPUT_DELAY_NANO_SECONDS below)
 //  * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/spi_master.html#gpio-matrix-routing
 //
-const int MISO_INPUT_DELAY_NANO_SECONDS = 50;
+const int MISO_INPUT_DELAY_NANO_SECONDS = 60;
 
-const spi_host_device_t SPI_HOSTID = SPI2_HOST;
-
+// GPIO pin to receive MCP2515 interrupts
 const gpio_num_t MC2515_INTERRUPTS_PIN = GPIO_NUM_5;
 
-const gpio_num_t CS_PIN = GPIO_NUM_9;
-const gpio_num_t SCLK_PIN = GPIO_NUM_10;
-const gpio_num_t MOSI_PIN = GPIO_NUM_11;
-const gpio_num_t MISO_PIN = GPIO_NUM_12;
+// SPI Host ID
+const spi_host_device_t SPI_HOSTID = SPI2_HOST;
+
+// SPI Pins
+const gpio_num_t CS_PIN = GPIO_NUM_19;
+const gpio_num_t SCLK_PIN = GPIO_NUM_18;
+const gpio_num_t MOSI_PIN = GPIO_NUM_16;
+const gpio_num_t MISO_PIN = GPIO_NUM_17;
 
 
 

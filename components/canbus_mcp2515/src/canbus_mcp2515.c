@@ -25,6 +25,11 @@
 static const char* CanBusMCP2515LogTag = "canbus-mcp2515";
 
 
+static esp_err_t internal_enable_mcp2515_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_events_config_t* const config);
+static esp_err_t internal_shutdown_mcp2515_interrupts(canbus_mcp2515_handle_t handle);
+
+static esp_err_t mcp2515_start_interrupt_dispatcher_task();
+static esp_err_t mcp2515_stop_interrupt_dispatcher_task();
 
 static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config);
 static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp2515_handle_t handle);
@@ -152,7 +157,10 @@ esp_err_t canbus_mcp2515_register_events_callback(canbus_mcp2515_handle_t handle
 
 
 
+static esp_err_t mcp2515_start_interrupt_dispatcher_task() {
 
+    return ESP_OK;
+}
 static esp_err_t internal_enable_mcp2515_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_events_config_t* const config) {
     esp_err_t ret = ESP_OK;
         // Configure the GPIO pin to listen to the MCP2515 interrupt signal
@@ -188,6 +196,11 @@ cleanup:
     // TODO: Detach ISR handler
     // TODO: Disable interrupts on MCP2515 on failure
     
+    return ret;
+}
+
+static esp_err_t internal_shutdown_mcp2515_interrupts(canbus_mcp2515_handle_t handle) {
+    esp_err_t ret = ESP_OK;
     return ret;
 }
 

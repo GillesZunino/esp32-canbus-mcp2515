@@ -81,15 +81,20 @@ esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
         return ESP_ERR_INVALID_STATE;
     }
     
-    // Track the first error we encounter so we can return it to the caller
+    // Track the first error we encounter so we can return it to the caller - We do try to detach all aspects of the driver regardless of which step failed
     esp_err_t firstError = ESP_OK;
 
-    // TODO: Detach interrupts
-
-    // Reset the MCP2515 before shutting the driver down
-    esp_err_t err = canbus_mcp2515_reset(handle);
+    // Shutdown interrupts if they were enabled
+    esp_err_t err = internal_shutdown_mcp2515_interrupts(handle);
     if (err != ESP_OK) {
         firstError = err;
+        ESP_LOGW(CanBusMCP2515LogTag, "%s() Failed to clear previously configured interrupts configuration (%d)", __func__, err);
+    }
+
+    // Reset the MCP2515 before shutting the driver down
+    err = canbus_mcp2515_reset(handle);
+    if (err != ESP_OK) {
+        firstError = firstError == ESP_OK ? err : firstError;
         ESP_LOGW(CanBusMCP2515LogTag, "%s() Failed to reset MCP2515 (%d)", __func__, err);
     }
 
@@ -119,29 +124,37 @@ esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle) {
     return mcp2515_send_single_byte_instruction(handle, MCP2515_INSTRUCTION_RESET);
 }
 
-esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_interrupt_config_t* config) {
+esp_err_t canbus_mcp2515_register_events_callback(canbus_mcp2515_handle_t handle, const mcp2515_events_config_t* const config) {
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_STATE;
     }
 
-    // TODO: Check interrupt configuration
-
-
-    esp_err_t ret = ESP_OK;
-
-    // If interrupts were configured before, undo these configurations first - MCP2515 starts with interrupts disabled by default
-    if (handle->interrupt_config.flags != MCP2515_INTERRUPT_DISABLED) {
-        // Reset GPIO pin
-        ret = gpio_reset_pin(handle->interrupt_config.intr_io_num);
-
-        // TODO: Detach handler
+    if (config == NULL) {
+        return ESP_ERR_INVALID_ARG;
     }
 
-    // Clear configuration
-    memset(&handle->interrupt_config, 0, sizeof(handle->interrupt_config));
+    if (config->intr_io_num == GPIO_NUM_NC) {
+        return ESP_ERR_INVALID_ARG;
+    }
 
-    // Apply new interrupts configuration
-    if (config->flags != MCP2515_INTERRUPT_DISABLED) {
+    // Detach previously registered handler if any
+    esp_err_t err = internal_shutdown_mcp2515_interrupts(handle);
+    if (err == ESP_OK) {
+        // Apply new configuration if requested
+        if (config->handler != NULL) {
+            err = internal_enable_mcp2515_interrupts(handle, config);
+        }
+    }
+
+    return err;
+}
+
+
+
+
+
+static esp_err_t internal_enable_mcp2515_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_events_config_t* const config) {
+    esp_err_t ret = ESP_OK;
         // Configure the GPIO pin to listen to the MCP2515 interrupt signal
         gpio_config_t gpioConfig = {
             .pin_bit_mask = 1ULL << config->intr_io_num,
@@ -150,7 +163,7 @@ esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, co
             .pull_down_en = GPIO_PULLDOWN_DISABLE,
             .intr_type = GPIO_INTR_NEGEDGE
         };
-        ESP_GOTO_ON_ERROR(gpio_config(&gpioConfig), cleanup, CanBusMCP2515LogTag, "%s() Failed to configure GPIO pin %d", __func__, config->intr_io_num);
+        ESP_GOTO_ON_ERROR(gpio_config(&gpioConfig), cleanup, CanBusMCP2515LogTag, "%s() Failed to configure GPIO pin %d for MCP2515 interrupts", __func__, config->intr_io_num);
 
         // Attach the interrupt handler to the GPIO pin
         // TODO: Choose the right interrupt attach mecanism
@@ -186,7 +199,7 @@ esp_err_t canbus_mcp2515_get_interrupt_flags(canbus_mcp2515_handle_t handle, can
     return mcp2515_read_register(handle, MCP2515_CANINTF, &flags->flags);
 }
 
-esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, mcp2515_interrupts_t flags) {
+esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, mcp2515_interrupt_mask_t flags) {
     if (handle->spi_device_handle == NULL) {
         return ESP_ERR_INVALID_STATE;
     }

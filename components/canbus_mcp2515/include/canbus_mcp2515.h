@@ -79,10 +79,20 @@ typedef struct mcp2515_bit_timing_config {
 } mcp2515_bit_timing_config_t;
 
 /**
- * @brief MCP2515 Interrupts.
+ * @brief MCP2515 events.
  */
 typedef enum {
-    MCP2515_INTERRUPT_DISABLED = 0,
+    MCP2515_EVENT_NONE = 0,
+    MCP2515_EVENT_ERROR = 1,
+    MCP2515_EVENT_WAKEUP = 2,
+    MCP2515_EVENT_TX0_MSG_SENT = 3,
+    MCP2515_EVENT_TX1_MSG_SENT = 4,
+    MCP2515_EVENT_TX2_MSG_SENT = 5,
+    MCP2515_EVENT_RX0_MSG_RECEIVED = 6,
+    MCP2515_EVENT_RX1_MSG_RECEIVED = 7
+} mcp2515_event_t;
+
+typedef enum {
     MCP2515_INTERRUPT_RX0_MSG_RECEIVED = 0x01,
     MCP2515_INTERRUPT_RX1_MSG_RECEIVED = 0x02,
     MCP2515_INTERRUPT_TX0_MSG_SENT = 0x04,
@@ -90,27 +100,25 @@ typedef enum {
     MCP2515_INTERRUPT_TX2_MSG_SENT = 0x10,
     MCP2515_INTERRUPT_ERROR = 0x20,
     MCP2515_INTERRUPT_WAKEUP = 0x40,
-    MCP2515_INTERRUPT_MESSAGE_ERROR = 0x80,
+    MCP2515_INTERRUPT_MESSAGE_ERROR = 0x80
+} mcp2515_interrupt_mask_t;
 
-    MCP2515_INTERRUPT_ALL_MSG_RECEIVED = MCP2515_INTERRUPT_RX0_MSG_RECEIVED | MCP2515_INTERRUPT_RX1_MSG_RECEIVED,
-    MCP2515_INTERRUPT_ALL_MSG_SENT = MCP2515_INTERRUPT_TX0_MSG_SENT | MCP2515_INTERRUPT_TX1_MSG_SENT | MCP2515_INTERRUPT_TX2_MSG_SENT,
-
-    MCP2515_INTERRUPT_ALL = MCP2515_INTERRUPT_ALL_MSG_RECEIVED | MCP2515_INTERRUPT_ALL_MSG_SENT | MCP2515_INTERRUPT_ERROR | MCP2515_INTERRUPT_WAKEUP | MCP2515_INTERRUPT_MESSAGE_ERROR
-} mcp2515_interrupts_t;
+typedef struct mcp2515_event_parameters {
+} mcp2515_event_parameters_t;
 
 /**
  * @brief MCP2515 interrupt handler.
  */
-typedef void (*mcp2515_interrupt_handler_t)(mcp2515_interrupts_t interrupt);
+typedef void (*mcp2515_events_handler_t)(mcp2515_event_t event, const mcp2515_event_parameters_t* const params, void* context);
 
 /**
- * @brief MCP2515 Interrupt configuration.
+ * @brief MCP2515 events configuration.
  */
-typedef struct mcp2515_interrupt_config {
+typedef struct mcp2515_events_config {
     gpio_num_t intr_io_num;
-    mcp2515_interrupts_t flags;
-    mcp2515_interrupt_handler_t handler;
-} mcp2515_interrupt_config_t;
+    mcp2515_events_handler_t handler;
+    void* context;
+} mcp2515_events_config_t;
 
 /**
  * @brief MCP2515 CLKOUT / SOF mode.
@@ -367,10 +375,10 @@ esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle);
 
 
 
-esp_err_t canbus_mcp2515_configure_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_interrupt_config_t* config);
+esp_err_t canbus_mcp2515_register_events_callback(canbus_mcp2515_handle_t handle, const mcp2515_events_config_t* const config);
 
 esp_err_t canbus_mcp2515_get_interrupt_flags(canbus_mcp2515_handle_t handle, canintf_t* flags);
-esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, mcp2515_interrupts_t flags);
+esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, mcp2515_interrupt_mask_t flags);
 
 
 /**

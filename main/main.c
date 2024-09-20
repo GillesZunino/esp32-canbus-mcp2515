@@ -23,6 +23,8 @@ const int MISO_INPUT_DELAY_NANO_SECONDS = 50;
 
 const spi_host_device_t SPI_HOSTID = SPI2_HOST;
 
+const gpio_num_t MC2515_INTERRUPTS_PIN = GPIO_NUM_5;
+
 const gpio_num_t CS_PIN = GPIO_NUM_9;
 const gpio_num_t SCLK_PIN = GPIO_NUM_10;
 const gpio_num_t MOSI_PIN = GPIO_NUM_11;
@@ -32,6 +34,36 @@ const gpio_num_t MISO_PIN = GPIO_NUM_12;
 
 canbus_mcp2515_handle_t can_mcp2515_handle = NULL;
 
+
+void mcp2515_events_handler(mcp2515_event_t event, const mcp2515_event_parameters_t* const params, void* context) {
+    switch (event) {
+        case MCP2515_EVENT_ERROR:
+            // TODO: Implement meaningful application logic
+            // TODO: reset the correct flags in MCP2515
+            break;
+
+        case MCP2515_EVENT_WAKEUP:
+            // TODO: Implement meaningful application logic
+            // TODO: reset the correct flags in MCP2515
+            break;
+
+        case MCP2515_EVENT_TX0_MSG_SENT:
+        case MCP2515_EVENT_TX1_MSG_SENT:
+        case MCP2515_EVENT_TX2_MSG_SENT:
+            // TODO: Implement meaningful application logic
+            // TODO: reset the correct flags in MCP2515
+            break;
+
+        case MCP2515_EVENT_RX0_MSG_RECEIVED:
+        case MCP2515_EVENT_RX1_MSG_RECEIVED:
+            // TODO: Implement meaningful application logic
+            // TODO: reset the correct flags in MCP2515
+            break;
+
+        default:
+            break;
+    }
+}
 
 void app_main(void) {
     // Configure SPI bus to communicate with MCP2515
@@ -141,12 +173,14 @@ void app_main(void) {
     ESP_LOGI(TAG, "Configure MCP2515 Extended frame filter RXF2");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_receive_filter(can_mcp2515_handle, &rxf2ExtendedFrameFilter));
 
-    // Configure interrupts
-    mcp2515_interrupt_config_t interruptsConfig = {
-        .flags = MCP2515_INTERRUPT_DISABLED
+    // Configure MCP2515 events callback
+    mcp2515_events_config_t eventsConfig = {
+        .intr_io_num = MC2515_INTERRUPTS_PIN,
+        .handler = mcp2515_events_handler,
+        .context = NULL
     };
-    ESP_LOGI(TAG, "Configure MCP2515 interrupts");
-    ESP_ERROR_CHECK(canbus_mcp2515_configure_interrupts(can_mcp2515_handle, &interruptsConfig));
+    ESP_LOGI(TAG, "Enable MCP2515 events callback");
+    ESP_ERROR_CHECK(canbus_mcp2515_register_events_callback(can_mcp2515_handle, &eventsConfig));
 
     // Standard CAN frame which will pass filtering
     can_frame_t filterdInStandardFrame = {

@@ -1,4 +1,5 @@
 [mapping:canbus_mcp2515]
 archive: libcanbus_mcp2515.a
 entries:
-    canbus_mcp2515_isr (noflash)     # All canbus_mcp2515_isr.c code/read-only data under IRAM/DRAM
+    if MCP2515_ISR_IN_IRAM = y:
+        canbus_mcp2515_isr (noflash)     # All canbus_mcp2515_isr.c code/read-only data under IRAM/DRAM

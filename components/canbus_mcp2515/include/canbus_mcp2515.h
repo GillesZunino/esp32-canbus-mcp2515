@@ -46,7 +46,7 @@ typedef struct mcp2515_spi_config {
  * @brief Configuration of MCP2515 device.
  */
 typedef struct mcp2515_config {
-    mcp2515_spi_config_t spi_cfg;       ///< SPi configuration for MCp2515
+    mcp2515_spi_config_t spi_cfg;       ///< SPI configuration for MCP2515
 } mcp2515_config_t;
 
 /**

@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "components/canbus_mcp2515/examples/can_mcp2515_write"
+		}
+	],
+	"settings": {
+		"idf.telemetry": false,
+		"idf.showOnboardingOnInit": false,
+		
+		"files.associations": {
+		}
+	}
+}

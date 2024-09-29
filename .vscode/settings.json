@@ -3,7 +3,7 @@
 
   "cmake.configureOnEdit": false,
   "cmake.configureOnOpen": false,
-  
+
   "idf.telemetry": false,
   "idf.showOnboardingOnInit": false,
 

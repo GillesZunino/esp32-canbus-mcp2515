@@ -283,7 +283,7 @@ typedef enum {
 } mcp2515_transmit_priority_t;
 
 /**
- * @brief Trasnmit options for sending CAN frames.
+ * @brief Transmit options for sending CAN frames.
  */
 typedef struct mcp2515_transmit_options {
     mcp2515_TXBn_t txb;                     ///< Transmit register to use

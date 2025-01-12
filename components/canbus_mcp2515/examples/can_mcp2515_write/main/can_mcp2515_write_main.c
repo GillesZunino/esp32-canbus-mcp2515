@@ -11,19 +11,27 @@
 #include "can.h"
 #include "canbus_mcp2515.h"
 
-const char* TAG = "mcp2515_main";
+const char* TAG = "mcp2515_write";
 
 //
-// NOTE: For maximum performance, prefer IO MUX  over GPIO Matrix routing
-//  * When using GPIO Matrix routing, the SPI bus speed is limited to 20 MHz and it may be necessary to adjust spi_device_interface_config_t::input_delay_ns
+// NOTE: For maximum performance, prefer IO MUX over GPIO Matrix routing
+//  * When using GPIO Matrix routing, the SPI bus speed is limited to 20 MHz and it may be necessary to adjust spi_device_interface_config_t::input_delay_ns (MISO_INPUT_DELAY_NANO_SECONDS below)
 //  * See https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/spi_master.html#gpio-matrix-routing
 //
+const int MISO_INPUT_DELAY_NANO_SECONDS = 60;
+
+// GPIO pin to receive MCP2515 interrupts
+const gpio_num_t MC2515_INTERRUPTS_PIN = GPIO_NUM_5;
+
+// SPI Host ID
 const spi_host_device_t SPI_HOSTID = SPI2_HOST;
 
-const gpio_num_t CS_PIN = GPIO_NUM_10;
-const gpio_num_t SCLK_PIN = GPIO_NUM_11;
-const gpio_num_t MOSI_PIN = GPIO_NUM_12;
-const gpio_num_t MISO_PIN = GPIO_NUM_13;
+// SPI Pins
+const gpio_num_t CS_PIN = GPIO_NUM_19;
+const gpio_num_t SCLK_PIN = GPIO_NUM_18;
+const gpio_num_t MOSI_PIN = GPIO_NUM_16;
+const gpio_num_t MISO_PIN = GPIO_NUM_17;
+
 
 
 canbus_mcp2515_handle_t can_mcp2515_handle = NULL;
@@ -49,12 +57,14 @@ void app_main(void) {
     mcp2515_config_t mcp2515InitConfig = {
         .spi_cfg = {
             .host_id = SPI_HOSTID,
+
+            // NOTE: Prefer mode = 0 [(0,0)] because it avoids one known issue with the MCP2515 - See https://ww1.microchip.com/downloads/en/DeviceDoc/80000179H.pdf
             .mode = 0,
+
             .clock_source = SPI_CLK_SRC_DEFAULT,
             .clock_speed_hz = 10 * 1000000,
-            
-            // NOTE: This may need adjustment when using GPIO Matrix routing
-            //.input_delay_ns = 50,
+
+            .input_delay_ns = MISO_INPUT_DELAY_NANO_SECONDS,
 
             .spics_io_num = CS_PIN,
             .queue_size = 8

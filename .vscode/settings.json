@@ -8,15 +8,18 @@
   "idf.showOnboardingOnInit": false,
 
   // Windows specific ESP IDF paths and tools
-  "idf.espIdfPathWin": "D:\\espressif\\v5.4\\esp-idf",
-  "idf.toolsPathWin": "D:\\espressif\\v5.4\\tools",
+  "idf.espIdfPathWin": "D:\\espressif\\v5.4.1\\esp-idf",
+  "idf.toolsPathWin": "D:\\espressif\\v5.4.1\\tools",
 
   // Linux / MacOS specific ESP IDF paths and tools
   // NOTE: For Espressif Docker images, comment out the following two lines to accept the ambient image configuration
-  "idf.espIdfPath": "/Users/gzunino/Documents/Espressif/v5.4/esp-idf",
-  "idf.toolsPath": "/Users/gzunino/Documents/Espressif/v5.4/tools",
+  "idf.espIdfPath": "/Users/gzunino/Documents/Espressif/v5.4.1/esp-idf",
+  "idf.toolsPath": "/Users/gzunino/Documents/Espressif/v5.4.1/tools",
 
+  "idf.pythonInstallPath": "D:\\espressif\\v5.4.1\\tools\\tools\\idf-python\\3.11.2\\python.exe",
+  
   "idf.customExtraVars": {
+    "IDF_TARGET": "esp32"
   },
 
   "idf.openOcdDebugLevel": 2,
@@ -28,8 +31,8 @@
     // * "openocd/esp32-s3-builtin-usb-to-jtag.cfg" for ESP32-S3 built-in JTAG via USB to dev board
     //
     //"openocd/esp32-ft2232hl-to-jtag.cfg"
-    "openocd/esp32-ft4232hl-to-jtag.cfg"
     //"openocd/esp32-s3-builtin-usb-to-jtag.cfg"
+    "openocd/esp32-ft4232hl-to-jtag.cfg"
   ],
   "idf.openOcdLaunchArgs": [],
 
@@ -43,7 +46,7 @@
 
   "idf.flashType": "JTAG",
 
-  "idf.portWin": "COM10",
+  "idf.portWin": "COM5",
   "idf.port": "/dev/tty.usbmodem1411101",
   
   "files.associations": {

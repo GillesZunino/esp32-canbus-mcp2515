@@ -175,7 +175,7 @@ static esp_err_t internal_enable_mcp2515_interrupts(canbus_mcp2515_handle_t hand
     ESP_GOTO_ON_ERROR(gpio_config(&gpioConfig), cleanup, CanBusMCP2515LogTag, "%s() Failed to configure GPIO pin %d for MCP2515 interrupts", __func__, config->intr_io_num);
 
     // Attach the interrupt handler to the GPIO pin
-    // TODO: Choose the right interrupt attach mecanism
+    // TODO: Choose the right interrupt attach mechanism
     //ESP_GOTO_ON_ERROR
     //gpio_isr_register(gpio_num_t gpio_num, gpio_isr_t isr_handler, void *args, int intr_alloc_flags, esp_err_t *err);
     //OR
@@ -340,7 +340,7 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
         return ESP_ERR_INVALID_STATE;
     }
 
-    // Options neeed to be specified
+    // Options need to be specified
     if (filter == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -440,7 +440,7 @@ esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t
 }
 
 esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config) {
-    // Options neeed to be specified
+    // Options need to be specified
     if (config == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -479,7 +479,7 @@ esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const 
         return ESP_ERR_INVALID_STATE;
     }
 
-    // Options neeed to be specified
+    // Options need to be specified
     if (config == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -514,7 +514,7 @@ esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mc
         return ESP_ERR_INVALID_STATE;
     }
 
-    // Options neeed to be specified
+    // Options need to be specified
     if (config == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
@@ -524,7 +524,7 @@ esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mc
                       (config->rx1bf == MCP2515_RXnBF_PIN_DISABLED ? 0 : (config->rx1bf == MCP2515_RXnBF_PIN_BUFFER_FULL_INT ? 0x0A: 0x08));
     esp_err_t err = mcp2515_modify_register(handle, MCP2515_BFPCTRL, bfpctrl, 0x3F);
     if (err == ESP_OK) {
-        // TODO: Is this enough to keep the config sync'ed
+        // TODO: Is this enough to keep the config synced
         handle->rxnbf_config = *config;
     }
 
@@ -666,12 +666,12 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     // Prepare the buffer to load the frame and transmit
     bool isExtendedFrame = frame->options & CAN_FRAME_OPTION_EXTENDED;
 
-    // Assemble the SPI payload needed to transmit the frame - We use a larger than needed statically allocated array for performances
+    // Assemble the SPI payload needed to transmit the frame - We use a larger than needed statically allocated array for performance
     //                     | TXB0CTRL | TXBnSIDH TXBnSIDL | TXBnDLC |   TXBnEID8 TXBnEID0   |
     const uint8_t cmdCount =    1     +         2         +    1    + (isExtendedFrame ? 2 : 0);
     WORD_ALIGNED_ATTR uint8_t transmitBuffer[6 + CAN_MAX_DLEN];
 
-    // Set priority via TXP[1:0] (TXBnCTRL) - We leave TXREQ[3] (TXBnCTRL) set to false as we will send the RTS SPI command when all bufers have been loaded 
+    // Set priority via TXP[1:0] (TXBnCTRL) - We leave TXREQ[3] (TXBnCTRL) set to false as we will send the RTS SPI command when all buffers have been loaded 
     transmitBuffer[0] = options->priority & 0x03;
 
     // Encode id into MCP2515 registers TXBnSIDH TXBnSIDL and TXBnEID8 TXBnEID0 if extended frame id
@@ -769,9 +769,9 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
     // Take exclusive access of the SPI bus while loading receive buffers
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
         
-        // TODO: Consider reducing SPI data transferred and read only the registers we need. We currently read all reigsters even for standard frames
+        // TODO: Consider reducing SPI data transferred and read only the registers we need. We currently read all registers even for standard frames
         // Retrieve RXBnCTRL RXBnSIDH RXBnSIDL RXBnEID8 RXBnEID0 RXBnDLC and then RXBnD0 .. RXBnD7 if there is data
-        // Minimize the time during which the bus is help by doing minimal decoding / processing here
+        // Minimize the time during which the bus is held by doing minimal decoding / processing here
         esp_err_t err = mcp2515_read_registers(handle, controlRegister, receiveRegisters, receiveRegistersCount);
         if (err == ESP_OK) {
             err = mcp2515_read_registers(handle, dataRegister, frameData, receiveRegisters[5] & 0x0F);

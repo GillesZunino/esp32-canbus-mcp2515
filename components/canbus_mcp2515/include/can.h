@@ -42,7 +42,7 @@ extern "C" {
  * @brief CAN payload length and Data Length Code (DLC) definitions according to ISO 11898-1.
  */
 #define CAN_MAX_DLC 8  ///< Maximum number of data bytes in a CAN data frame
-#define CAN_MAX_DLEN 8 ///< CAN frame payload maximum length in byte
+#define CAN_MAX_DLEN 8 ///< CAN frame payload maximum length in bytes
 typedef enum {
     CAN_FRAME_OPTION_RTR = 1,                ///< Frame is a Remote Transmission Request
     CAN_FRAME_OPTION_EXTENDED = 2            ///< Frame is an Extended Frame

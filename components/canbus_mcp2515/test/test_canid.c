@@ -15,7 +15,7 @@
 TEST_CASE("CAN Standard ID Encoding", TAG) {
     ESP_LOGI(TAG, "Standard CAN ID encoding test starting");
 
-    // Scan all ids in the CAN V2.0B Standard space, encode for MCP2515 decod and verify match
+    // Scan all ids in the CAN V2.0B Standard space, encode for MCP2515, decode and verify match
     const bool isExtendedFrame = false;
     for (uint32_t canId = 0; canId <= 0x7FF; canId++) {
         uint8_t buffer[4] = {0};
@@ -36,7 +36,7 @@ TEST_CASE("CAN Extended ID Encoding", TAG) {
     ESP_LOGI(TAG, "Extended CAN ID encoding test starting");
 
 
-    // Scan all ids in the CAN V2.0B Extended space, encode for MCP2515 decod and verify match
+    // Scan all ids in the CAN V2.0B Extended space, encode for MCP2515, decode and verify match
     const bool isExtendedFrame = true;
     for (uint32_t canId = 0; canId <=  0x1FFFFFFFUL; canId++) {
         uint8_t buffer[4] = {0};

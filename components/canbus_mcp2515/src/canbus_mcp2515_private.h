@@ -13,7 +13,7 @@ extern "C" {
 
 
 /**
- * @brief Internal structure to represent our conecntion to an MCP2515 device.
+ * @brief Internal structure to represent our connection to an MCP2515 device.
  * @attention This structure is internal and must not be accessed directly.
  */
 typedef struct canbus_mcp2515 {

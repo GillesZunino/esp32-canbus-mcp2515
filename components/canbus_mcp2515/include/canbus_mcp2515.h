@@ -144,7 +144,7 @@ typedef enum {
  */
 typedef struct mcp2515_clkout_sof_config {
     mcp2515_clkout_sof_mode_t mode;          ///< CLKOUT/SOF pin mode
-    mcp2515_clkout_prescaler_t prescaler;    ///< CLKOUT prescaler when CLKOUT/SOF pin is confgiured for CLKOUT
+    mcp2515_clkout_prescaler_t prescaler;    ///< CLKOUT prescaler when CLKOUT/SOF pin is configured for CLKOUT
 } mcp2515_clkout_sof_config_t;
 
 
@@ -294,9 +294,9 @@ typedef struct mcp2515_transmit_options {
 /**
  * @brief MCP2515 error flags for EFLG interpretation.
  */
-#define MCP2515_EFLAG_RX1OVR 0x80       ///< Receive buffer 1 overflow flag. Set when a valid message is received in RX1and an interupt is pending
-#define MCP2515_EFLAG_RX0OVR 0x40       ///< Receive buffer 0 overflow flag. Set when a valid message is received in RX0 and an interupt is pending
-#define MCP2515_EFLAG_TXBO 0x20         ///< Trasnmit Bus-Off flag. Set when TEC is greater or equal than 255
+#define MCP2515_EFLAG_RX1OVR 0x80       ///< Receive buffer 1 overflow flag. Set when a valid message is received in RX1 and an interrupt is pending
+#define MCP2515_EFLAG_RX0OVR 0x40       ///< Receive buffer 0 overflow flag. Set when a valid message is received in RX0 and an interrupt is pending
+#define MCP2515_EFLAG_TXBO 0x20         ///< Transmit Bus-Off flag. Set when TEC is greater or equal than 255
 #define MCP2515_EFLAG_TEXP 0x10         ///< Transmit Error-Passive flag. Set when TEC is greater or equal than 128
 #define MCP2515_EFLAG_REXP 0x08         ///< Receive Error-Passive flag. Set when REC is greater or equal than 128
 #define MCP2515_EFLAG_TXWARN 0x04       ///< Transmit error warning flag. Set when TEC is greater or equal than 96

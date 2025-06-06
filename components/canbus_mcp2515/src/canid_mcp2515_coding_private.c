@@ -16,7 +16,7 @@ FORCE_INLINE_ATTR uint8_t internal_get_sid10_to_sid3_from_standard_id(const uint
 }
 
 FORCE_INLINE_ATTR uint8_t internal_get_sid10_to_sid3_from_extended_id(const uint32_t id) {
-    return ((id &0x1F000000) >> 21) | ((id & 0xE00000) >> 21);
+    return ((id & 0x1F000000) >> 21) | ((id & 0xE00000) >> 21);
 }
 
 FORCE_INLINE_ATTR uint8_t internal_get_sid2_to_sid0_from_standard_id(const uint32_t id) {

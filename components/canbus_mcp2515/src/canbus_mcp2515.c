@@ -82,7 +82,17 @@ cleanup:
 }
 
 esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
+    if (handle == NULL) {
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'handle' must not be NULL");
+#endif
+        return ESP_ERR_INVALID_ARG;
+    }
+
     if (handle->spi_device_handle == NULL) {
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'handle'has not been initialized via canbus_mcp2515_init()");
+#endif
         return ESP_ERR_INVALID_STATE;
     }
     
@@ -93,21 +103,21 @@ esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
     esp_err_t err = internal_shutdown_mcp2515_interrupts(handle);
     if (err != ESP_OK) {
         firstError = err;
-        ESP_LOGW(CanBusMCP2515LogTag, "%s() Failed to clear previously configured interrupts configuration (%d)", __func__, err);
+        ESP_LOGW(CanBusMCP2515LogTag, "Failed to clear previously configured interrupts configuration (%d)", err);
     }
 
     // Reset the MCP2515 before shutting the driver down
     err = canbus_mcp2515_reset(handle);
     if (err != ESP_OK) {
-        firstError = firstError == ESP_OK ? err : firstError;
-        ESP_LOGW(CanBusMCP2515LogTag, "%s() Failed to reset MCP2515 (%d)", __func__, err);
+        if (firstError == ESP_OK) { firstError = err; }
+        ESP_LOGW(CanBusMCP2515LogTag, "Failed to reset MCP2515 (%d)", err);
     }
 
     // Remove the device from the bus
     err = spi_bus_remove_device(handle->spi_device_handle);
     if (err != ESP_OK) {
-        firstError = firstError == ESP_OK ? err : firstError;
-        ESP_LOGW(CanBusMCP2515LogTag, "%s() Failed to remove MCP2515 device from SPI bus (%d)", __func__, err);
+        if (firstError == ESP_OK) { firstError = err; }
+        ESP_LOGW(CanBusMCP2515LogTag, "Failed to spi_bus_remove_device() (%d)", err);
     }
 
     // Release memory

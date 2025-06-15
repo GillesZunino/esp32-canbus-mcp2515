@@ -40,7 +40,7 @@ esp_err_t canbus_mcp2515_init(const mcp2515_config_t* config, canbus_mcp2515_han
     *handle = NULL;
 
     // Basic configuration validation - Some parts of the configuration will be validated later by the SPI driver
-    ESP_RETURN_ON_ERROR(internal_check_mcp2515_config(config), CanBusMCP2515LogTag, "%s() Invalid configuration", __func__);
+    ESP_RETURN_ON_ERROR(internal_check_mcp2515_config(config), CanBusMCP2515LogTag, "Invalid configuration");
 
     // Allocate space for our handle
     canbus_mcp2515_t* pMcp2515 = heap_caps_calloc(1, sizeof(canbus_mcp2515_t), MCP2515_MALLOC_CAPS);
@@ -67,7 +67,7 @@ esp_err_t canbus_mcp2515_init(const mcp2515_config_t* config, canbus_mcp2515_han
     };
 
     esp_err_t ret = ESP_OK;
-    ESP_GOTO_ON_ERROR(spi_bus_add_device(config->spi_cfg.host_id, &spiDeviceInterfaceConfig, &pMcp2515->spi_device_handle), cleanup, CanBusMCP2515LogTag, "%s() Failed to spi_bus_add_device()", __func__);
+    ESP_GOTO_ON_ERROR(spi_bus_add_device(config->spi_cfg.host_id, &spiDeviceInterfaceConfig, &pMcp2515->spi_device_handle), cleanup, CanBusMCP2515LogTag, "Failed to spi_bus_add_device()");
     
     *handle = pMcp2515;
 
@@ -1045,11 +1045,17 @@ esp_err_t mcp2515_send_single_byte_instruction(canbus_mcp2515_handle_t handle, c
 
 static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config) {
     if (config == NULL) {
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'config' must not be NULL");
+#endif
         return ESP_ERR_INVALID_ARG;
     }
 
     // MCP2515 data sheet indicates the SPI clock is 10MHz maximum
     if (config->spi_cfg.clock_speed_hz > 10 * 1000000) {
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'spi_cfg.clock_speed_hz' must be <= 10MHz");
+#endif
         return ESP_ERR_INVALID_ARG;
     }
 

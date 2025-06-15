@@ -32,6 +32,7 @@ static esp_err_t mcp2515_start_interrupt_dispatcher_task();
 static esp_err_t mcp2515_stop_interrupt_dispatcher_task();
 
 static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config);
+static esp_err_t internal_validate_canbus_mcp2515_handle(canbus_mcp2515_handle_t handle);
 static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp2515_handle_t handle);
 static esp_err_t internal_check_can_frame(const can_frame_t* frame);
 
@@ -82,19 +83,7 @@ cleanup:
 }
 
 esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
-    if (handle == NULL) {
-#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
-        ESP_LOGE(CanBusMCP2515LogTag, "'handle' must not be NULL");
-#endif
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    if (handle->spi_device_handle == NULL) {
-#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
-        ESP_LOGE(CanBusMCP2515LogTag, "'handle'has not been initialized via canbus_mcp2515_init()");
-#endif
-        return ESP_ERR_INVALID_STATE;
-    }
+    ESP_RETURN_ON_ERROR(internal_validate_canbus_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
     
     // Track the first error we encounter so we can return it to the caller - We do try to detach all aspects of the driver regardless of which step failed
     esp_err_t firstError = ESP_OK;
@@ -127,9 +116,7 @@ esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
 }
 
 esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle) {
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
+    ESP_RETURN_ON_ERROR(internal_validate_canbus_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
 
     //
     // Reset MCP2515 - This sets configuration mode automatically
@@ -1067,6 +1054,24 @@ static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config) {
         ESP_LOGE(CanBusMCP2515LogTag, "'spi_cfg.clock_speed_hz' must be <= 10MHz");
 #endif
         return ESP_ERR_INVALID_ARG;
+    }
+
+    return ESP_OK;
+}
+
+esp_err_t internal_validate_canbus_mcp2515_handle(canbus_mcp2515_handle_t handle) {
+    if (handle == NULL) {
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'handle' must not be NULL");
+#endif
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (handle->spi_device_handle == NULL) {
+#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'handle' has not been initialized via canbus_mcp2515_init()");
+#endif
+        return ESP_ERR_INVALID_STATE;
     }
 
     return ESP_OK;

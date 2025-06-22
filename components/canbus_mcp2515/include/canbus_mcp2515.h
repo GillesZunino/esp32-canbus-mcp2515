@@ -384,13 +384,13 @@ esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, m
 /**
  * @brief Get the operation mode of the MCP2515 device.
  * @param handle    Handle of the MCP2515 device
- * @param pMode     Pointer to a memory location which receives the mode
+ * @param mode     Pointer to a memory location which receives the mode
  * @return 
  *       - ESP_OK:                On success
  *       - ESP_ERR_INVALID_STATE: MCP2515 device is not in use
  *       - ESP_ERR_INVALID_ARG:   Invalid argument
  */
-esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* pMode);
+esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* mode);
 
 /**
  * @brief Set the operation mode of the MCP2515 device.

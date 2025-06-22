@@ -10,7 +10,7 @@
 
 #include "can.h"
 #include "canbus_mcp2515.h"
-#include "canbus_mcp2515_utils.h"
+#include "canbus_mcp2515_log_utils.h"
 
 const char* TAG = "mcp2515_main";
 

@@ -7,22 +7,26 @@
 #include <esp_check.h>
 #include <esp_attr.h>
 
-#include "canbus_mcp2515_utils.h"
-#include "canbus_mcp2515_types.h"
-#include "canbus_mcp2515.h"
+#include "canbus_mcp2515_logtag.h"
 
-#include "canbus_mcp2515_private.h"
+#include "canbus_mcp2515_handle.h"
+#include "canbus_mcp2515_registers.h"
+#include "canbus_mcp2515_instructions.h"
+
+#include "canbus_mcp2515_log_utils.h"
 #include "canid_mcp2515_coding_private.h"
+
+#include "canbus_mcp2515.h"
 
 
 #ifdef CONFIG_MCP2515_ISR_IN_IRAM
-#define MCP2515_MALLOC_CAPS    (MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)
+#define MCP2515_MALLOC_CAPS     (MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT)
+#define INTR_FLAGS              ESP_INTR_FLAG_IRAM
 #else
-#define MCP2515_MALLOC_CAPS    MALLOC_CAP_DEFAULT
+#define MCP2515_MALLOC_CAPS     MALLOC_CAP_DEFAULT
+#define INTR_FLAGS              0
 #endif
 
-
-static const char* CanBusMCP2515LogTag = "canbus-mcp2515";
 
 
 static esp_err_t internal_enable_mcp2515_interrupts(canbus_mcp2515_handle_t handle, const mcp2515_events_config_t* const config);
@@ -32,7 +36,7 @@ static esp_err_t mcp2515_start_interrupt_dispatcher_task();
 static esp_err_t mcp2515_stop_interrupt_dispatcher_task();
 
 static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config);
-static esp_err_t internal_validate_canbus_mcp2515_handle(canbus_mcp2515_handle_t handle);
+
 static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp2515_handle_t handle);
 static esp_err_t internal_check_can_frame(const can_frame_t* frame);
 
@@ -83,7 +87,7 @@ cleanup:
 }
 
 esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
-    ESP_RETURN_ON_ERROR(internal_validate_canbus_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
     
     // Track the first error we encounter so we can return it to the caller - We do try to detach all aspects of the driver regardless of which step failed
     esp_err_t firstError = ESP_OK;
@@ -116,7 +120,7 @@ esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
 }
 
 esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle) {
-    ESP_RETURN_ON_ERROR(internal_validate_canbus_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
 
     //
     // Reset MCP2515 - This sets configuration mode automatically
@@ -218,29 +222,27 @@ esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, m
     return mcp2515_modify_register(handle, MCP2515_CANINTF, 0, flags);
 }
 
-esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* pMode) {
-    if (pMode == NULL) {
-        return ESP_ERR_INVALID_ARG;
-    }
 
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
 
+esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* mode) {
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_FALSE(mode != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'mode' must not be NULL'");
+
+    return internal_mcp2515_get_mode(handle, mode);
+}
+
+static esp_err_t internal_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* mode) {
     uint8_t canStat = 0;
-    esp_err_t err = mcp2515_read_register(handle, MCP2515_CANSTAT, &canStat);
+    esp_err_t err = unchecked_mcp2515_read_register(handle, MCP2515_CANSTAT, &canStat);
     if (err == ESP_OK) {
-        *pMode = (mcp2515_mode_t) canStat >> 5;
-        return ESP_OK;
+        *mode = (mcp2515_mode_t) canStat >> 5;
     }
 
     return err;
 }
 
 esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_mode_t mode, const TickType_t modeChangeDelay) {
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
 
     // Try to set the desired mode - The mode will not change until all send / receive have completed
     esp_err_t err = mcp2515_modify_register(handle, MCP2515_CANCTRL, mode << 5, 0xE0);
@@ -248,15 +250,15 @@ esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_
         vTaskDelay(modeChangeDelay);
 
         uint8_t canStat = 0;
-        err = mcp2515_read_register(handle, MCP2515_CANSTAT, &canStat);
+        err = unchecked_mcp2515_read_register(handle, MCP2515_CANSTAT, &canStat);
         if (err == ESP_OK) {
             uint8_t opMd = canStat >> 5;
             bool currentModeMatchesDesired = opMd == mode;
             if (!currentModeMatchesDesired) {
 #ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
-                ESP_LOGE(CanBusMCP2515LogTag, "%s() Failed to set MCP2515 mode to '%s', current mode is '%s'", __func__, dump_mcp2515_mode(mode), dump_mcp2515_mode(opMd));
+                ESP_LOGE(CanBusMCP2515LogTag, "Failed to set MCP2515 mode to '%s', current mode is '%s'", dump_mcp2515_mode(mode), dump_mcp2515_mode(opMd));
 #else
-                ESP_LOGE(CanBusMCP2515LogTag, "%s() Failed to set MCP2515 mode to %d, current mode is %d", __func__, mode, opMd);
+                ESP_LOGE(CanBusMCP2515LogTag, "Failed to set MCP2515 mode to %d, current mode is %d", mode, opMd);
 #endif
             }
             return currentModeMatchesDesired ? ESP_OK : ESP_FAIL;
@@ -418,10 +420,7 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
 }
 
 esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t handle, mcp2515_wakeup_lowpass_filter_t filter) {
-    // Handle must have been initialized, which means we have configured the SPI device
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
 
     // Validate configuration
     if ((filter != MCP2515_WAKEUP_LOWPASS_FILTER_DISABLED) && (filter != MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED)) {
@@ -431,7 +430,7 @@ esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t
     // MCP2515 needs to be in configuration mode to change CNF3
     ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
-    // Configure WAKFIL via CANCTRL[6]
+    // Configure WAKFIL via CNF3[6]
     uint8_t cnf3 = filter == MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED ? 0x40 : 0x00;
     return mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, 0x40);
 }
@@ -495,7 +494,7 @@ esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txr
     }
 
     uint8_t stagedTxrts;
-    esp_err_t err = mcp2515_read_register(handle, MCP2515_TXRTSCTRL, &stagedTxrts);
+    esp_err_t err = unchecked_mcp2515_read_register(handle, MCP2515_TXRTSCTRL, &stagedTxrts);
     if (err == ESP_OK) {
         *txrts = (stagedTxrts >> 3) & 0x07;
     } else {
@@ -596,19 +595,19 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     if (options->txb == MCP2515_TXB_AUTO) {
         // A buffer is considered 'available' if the buffer is not be pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
         uint8_t txbnctrl = 0;
-        esp_err_t err = mcp2515_read_register(handle, MCP2515_TXB0CTRL, &txbnctrl);
+        esp_err_t err = unchecked_mcp2515_read_register(handle, MCP2515_TXB0CTRL, &txbnctrl);
         if (err == ESP_OK) {
             if ((txbnctrl & 0x08) == 0) {
                 // TXB0 is available
                 effectiveTXn = MCP2515_TXB0;
             } else {
-                err = mcp2515_read_register(handle, MCP2515_TXB1CTRL, &txbnctrl);
+                err = unchecked_mcp2515_read_register(handle, MCP2515_TXB1CTRL, &txbnctrl);
                 if (err == ESP_OK)  {
                     if ((txbnctrl & 0x08) == 0) {
                         // TXB1 is available
                         effectiveTXn = MCP2515_TXB1;
                     } else {
-                        err = mcp2515_read_register(handle, MCP2515_TXB2CTRL, &txbnctrl);
+                        err = unchecked_mcp2515_read_register(handle, MCP2515_TXB2CTRL, &txbnctrl);
                         if (err == ESP_OK) {
                              if ((txbnctrl & 0x08) == 0) {
                                 // TXB2 is available
@@ -625,7 +624,7 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     } else {
         // Confirm the desired buffer is not pending transmission - TXREQ bit (TXBnCTRL[3]) must be clear
         uint8_t txbnctrl = 0;
-        ESP_RETURN_ON_ERROR(mcp2515_read_register(handle, effectiveTXn, &txbnctrl), CanBusMCP2515LogTag, "%s() Failed to read TXBnCTRL register", __func__);
+        ESP_RETURN_ON_ERROR(unchecked_mcp2515_read_register(handle, effectiveTXn, &txbnctrl), CanBusMCP2515LogTag, "%s() Failed to read TXBnCTRL register", __func__);
         if ((txbnctrl & 0x08) == 0) {
             return ESP_ERR_INVALID_STATE;
         }
@@ -836,207 +835,34 @@ esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, eflg_t*
 
 
 
-esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data) {
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    //
-    // Read Register Instruction format:
-    //   * MOSI | 0xC0 | <Register Address> |      |
-    //   * MISO | N/A  | N/A                | Data |         
-    //
-    const uint8_t commandLengthInBytes = 2;
-    const uint8_t responseLengthInBytes = 1;
-    const uint8_t transactionLengthInBytes = commandLengthInBytes + responseLengthInBytes;
-    spi_transaction_t spiTransaction = {
-        .flags = SPI_TRANS_USE_TXDATA | SPI_TRANS_USE_RXDATA,
-        .length = transactionLengthInBytes * 8,
-        .rxlength = transactionLengthInBytes * 8,
-        .tx_data = { MCP2515_INSTRUCTION_READ, mcp2515Register }
-    };
-
-    esp_err_t err = spi_device_transmit(handle->spi_device_handle, &spiTransaction);
-    if (err == ESP_OK) {
-        *data = spiTransaction.rx_data[transactionLengthInBytes - 1];
-    }
-
-    return err;
-}
-
-esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, uint8_t* data, const uint8_t count) {
-    // Handle must have been initialized, which means we have configured the SPI device
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
-
-    //
-    // Read Registers Instruction format:
-    //   * MOSI | 0xC0 | <Register Address> |
-    //   * MISO | N/A  | N/A                | <Data> | <Data> | ... | <Data> |
-    //
-
-    // Prepare the command buffer with the provided payload
-    const uint8_t commandLengthInBytes = 2;
-    const size_t transactionLengthInBytes = commandLengthInBytes + count;
-
-    WORD_ALIGNED_ATTR uint8_t commandBuffer[commandLengthInBytes];
-    commandBuffer[0] = MCP2515_INSTRUCTION_READ;
-    commandBuffer[1] = mcp2515RegisterStart;
-
-    uint8_t receiveBuffer[transactionLengthInBytes];
-
-    spi_transaction_t spiTransaction = {
-        .flags = 0,
-        .length = transactionLengthInBytes * 8,
-        .rxlength = transactionLengthInBytes * 8,
-        .tx_buffer = commandBuffer,
-        .rx_buffer = receiveBuffer
-    };
-
-    esp_err_t err = spi_device_transmit(handle->spi_device_handle, &spiTransaction);
-    if (err == ESP_OK) {
-       memcpy(data, &receiveBuffer[commandLengthInBytes], count);
-    }
-
-    return err;
-}
 
 
-esp_err_t mcp2515_write_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data) {
-    // Handle must have been initialized, which means we have configured the SPI device
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
 
-    //
-    // Write Register Instruction format:
-    //   * MOSI | 0x02 | <Register Address> |
-    //   * MISO | N/A  | N/A                |
-    //
-    
-    const uint8_t transactionLengthInBytes = 3;
-    spi_transaction_t spiTransaction = {
-        .flags = SPI_TRANS_USE_TXDATA,
-        .length = transactionLengthInBytes * 8,
-        .rxlength = 0,
-        .tx_data = { MCP2515_INSTRUCTION_WRITE, mcp2515Register, data }
-    };
 
-    return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
-}
 
-esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, const uint8_t data[], const uint8_t count) {
-    if (count == 0) {
-        return ESP_ERR_INVALID_ARG;
-    }
-    
-    // Handle must have been initialized, which means we have configured the SPI device
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
 
-    //
-    // Write Register Instruction format:
-    //   * MOSI | 0x02 | <Register Address> | <Data> | <Data> | ... | <Data> |
-    //   * MISO | N/A  | N/A                | N/A    | N/A    | ... | N/A    |
-    //
 
-    // Prepare the command buffer with the provided payload
-    const size_t transactionLenInBytes = 2UL + count;
-    WORD_ALIGNED_ATTR uint8_t writeBuffer[transactionLenInBytes];
-    writeBuffer[0] = MCP2515_INSTRUCTION_WRITE;
-    writeBuffer[1] = mcp2515RegisterStart;
-    memcpy(&writeBuffer[2], data, count);
 
-    spi_transaction_t spiTransaction = {
-        .flags = 0,
-        .length = transactionLenInBytes * 8,
-        .rxlength = 0,
-        .tx_buffer = writeBuffer
-    };
 
-    return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
-}
 
-esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data, const uint8_t mask) {
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
 
-    // Ensure the register can be modified via BITMOD
-    switch (mcp2515Register) {
-        case MCP2515_BFPCTRL:
-        case MCP2515_TXRTSCTRL:
-        case MCP2515_CANCTRL:
-        case MCP2515_CNF3:
-        case MCP2515_CNF2:
-        case MCP2515_CNF1:
-        case MCP2515_CANINTE:
-        case MCP2515_CANINTF:
-        case MCP2515_EFLG:
-        case MCP2515_TXB0CTRL:
-        case MCP2515_TXB1CTRL:
-        case MCP2515_TXB2CTRL:
-        case MCP2515_RXB0CTRL:
-        case MCP2515_RXB1CTRL:
-            break;
-        default:
-            return ESP_ERR_INVALID_ARG;
-    }
 
-    //
-    // Bit Modify Instruction format:
-    //   * MOSI | 0x05 | <Register Address> | <Mask> | <Data> |
-    //   * MISO |      |                    |        |        |
-    //
-    const uint8_t transactionLengthInBytes = 4;
-    spi_transaction_t spiTransaction = {
-        .flags = SPI_TRANS_USE_TXDATA,
-        .length = transactionLengthInBytes * 8,
-        .rxlength = 0,
-        .tx_data = { MCP2515_INSTRUCTION_BITMOD, mcp2515Register, mask, data }
-    };
 
-    return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
-}
 
-esp_err_t mcp2515_send_single_byte_instruction(canbus_mcp2515_handle_t handle, const mcp2515_instruction_t instruction) {
-    // TODO: Validate in debug the instruction is a single byte instruction
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
 
-    // Validate the instruction is single byte out, no data in
-    switch (instruction) {
-        case MCP2515_INSTRUCTION_RESET:
-        case MCP2515_INSTRUCTION_RTS_TX0:
-        case MCP2515_INSTRUCTION_RTS_TX1:
-        case MCP2515_INSTRUCTION_RTS_TX2:
-            break;
 
-        default:
-            return ESP_ERR_INVALID_ARG;
-    }
 
-    //
-    // One byte MCP2515 instruction
-    //   * MOSI | <Instruction> |
-    //   * MISO |      N/A      |
-    //
-    const uint8_t transactionLengthInBytes = 1;
-    spi_transaction_t spiTransaction = {
-        .flags = SPI_TRANS_USE_TXDATA,
-        .length = transactionLengthInBytes * 8,
-        .rxlength = 0,
-        .tx_data = { instruction }
-    };
 
-    return spi_device_transmit(handle->spi_device_handle, &spiTransaction);
+
+
+
+
+
 }
 
 
 
+}
 
 
 
@@ -1059,30 +885,15 @@ static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config) {
     return ESP_OK;
 }
 
-esp_err_t internal_validate_canbus_mcp2515_handle(canbus_mcp2515_handle_t handle) {
-    if (handle == NULL) {
-#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
-        ESP_LOGE(CanBusMCP2515LogTag, "'handle' must not be NULL");
-#endif
-        return ESP_ERR_INVALID_ARG;
-    }
 
-    if (handle->spi_device_handle == NULL) {
-#if CONFIG_MCP2515_ENABLE_DEBUG_LOG
-        ESP_LOGE(CanBusMCP2515LogTag, "'handle' has not been initialized via canbus_mcp2515_init()");
-#endif
-        return ESP_ERR_INVALID_STATE;
-    }
 
-    return ESP_OK;
-}
 
 static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp2515_handle_t handle) {
     mcp2515_mode_t mode;
-    esp_err_t err = canbus_mcp2515_get_mode(handle, &mode);
+    esp_err_t err = internal_mcp2515_get_mode(handle, &mode);
     if (err == ESP_OK) {
 #if CONFIG_MCP2515_ENABLE_DEBUG_LOG
-        ESP_LOGI(CanBusMCP2515LogTag, "%s() MCP2515 current mode '%s'", __func__, dump_mcp2515_mode(mode));
+        ESP_LOGI(CanBusMCP2515LogTag, "MCP2515 current mode '%s'", dump_mcp2515_mode(mode));
 #endif
         return mode == MCP2515_MODE_CONFIG ? ESP_OK : ESP_ERR_NOT_ALLOWED;
     }

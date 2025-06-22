@@ -5,8 +5,8 @@
 #include <freertos/FreeRTOS.h>
 
 #include "canbus_mcp2515.h"
-#include "canbus_mcp2515_private.h"
-#include "canbus_mcp2515_types.h"
+#include "canbus_mcp2515_handle.h"
+#include "canbus_mcp2515_registers.h"
 
 
 void canbus_mcp2515_task(void* arg) {

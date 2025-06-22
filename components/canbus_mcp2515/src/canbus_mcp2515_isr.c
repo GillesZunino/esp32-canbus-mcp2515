@@ -5,7 +5,7 @@
 #include <esp_attr.h>
 #include <esp_log.h>
 
-#include "canbus_mcp2515_private.h"
+#include "canbus_mcp2515_handle.h"
 
 #define TAG "canbus-mcp2515-isr"
 

@@ -4,41 +4,15 @@
 
 #pragma once
 
+#include <esp_err.h>
+
+#include "canbus_mcp2515_handle.h"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
-/**
- * @brief MCP2515 instructions.
- */
-typedef enum {
-    MCP2515_INSTRUCTION_WRITE           = 0x02,
-    MCP2515_INSTRUCTION_READ            = 0x03,
-    MCP2515_INSTRUCTION_BITMOD          = 0x05,
-
-    MCP2515_INSTRUCTION_LOAD_TXB0SIDH   = 0x40,
-    MCP2515_INSTRUCTION_LOAD_TXB0D0     = 0x41,
-    MCP2515_INSTRUCTION_LOAD_TXB1SIDH   = 0x42,
-    MCP2515_INSTRUCTION_LOAD_TXB1D0     = 0x43,
-    MCP2515_INSTRUCTION_LOAD_TXB2SIDH   = 0x44,
-    MCP2515_INSTRUCTION_LOAD_TXB2D0     = 0x45,
-
-    MCP2515_INSTRUCTION_RTS_TX0         = 0x81,
-    MCP2515_INSTRUCTION_RTS_TX1         = 0x82,
-    MCP2515_INSTRUCTION_RTS_TX2         = 0x84,
-    MCP2515_INSTRUCTION_RTS_ALL         = MCP2515_INSTRUCTION_RTS_TX0 | MCP2515_INSTRUCTION_RTS_TX1 | MCP2515_INSTRUCTION_RTS_TX2,
-
-    MCP2515_INSTRUCTION_READ_RXB0SIDH   = 0x90,
-    MCP2515_INSTRUCTION_READ_RXB0D0     = 0x92,
-    MCP2515_INSTRUCTION_READ_RXB1SIDH   = 0x94,
-    MCP2515_INSTRUCTION_READ_RXB1D0     = 0x96,
-
-    MCP2515_INSTRUCTION_READ_STATUS     = 0xA0,
-    MCP2515_INSTRUCTION_RX_STATUS       = 0xB0,
-    MCP2515_INSTRUCTION_RESET           = 0xC0
-}  mcp2515_instruction_t;
 
 
 /**
@@ -111,7 +85,7 @@ typedef enum {
 
     MCP2515_TXB0DLC   = 0x35,
 
-    MCP2515_TXB0DO    = 0x36,
+    MCP2515_TXB0D0    = 0x36,
     MCP2515_TXB0D1    = 0x37,
     MCP2515_TXB0D2    = 0x38,
     MCP2515_TXB0D3    = 0x39,
@@ -128,7 +102,7 @@ typedef enum {
 
     MCP2515_TXB1DLC   = 0x45,
 
-    MCP2515_TXB1DO    = 0x46,
+    MCP2515_TXB1D0    = 0x46,
     MCP2515_TXB1D1    = 0x47,
     MCP2515_TXB1D2    = 0x48,
     MCP2515_TXB1D3    = 0x49,
@@ -145,7 +119,7 @@ typedef enum {
 
     MCP2515_TXB2DLC   = 0x55,
 
-    MCP2515_TXB2DO    = 0x56,
+    MCP2515_TXB2D0    = 0x56,
     MCP2515_TXB2D1    = 0x57,
     MCP2515_TXB2D2    = 0x58,
     MCP2515_TXB2D3    = 0x59,
@@ -162,7 +136,7 @@ typedef enum {
 
     MCP2515_RXB0DLC   = 0x65,
 
-    MCP2515_RXB0DO    = 0x66,
+    MCP2515_RXB0D0    = 0x66,
     MCP2515_RXB0D1    = 0x67,
     MCP2515_RXB0D2    = 0x68,
     MCP2515_RXB0D3    = 0x69,
@@ -179,7 +153,7 @@ typedef enum {
 
     MCP2515_RXB1DLC   = 0x75,
 
-    MCP2515_RXB1DO    = 0x76,
+    MCP2515_RXB1D0    = 0x76,
     MCP2515_RXB1D1    = 0x77,
     MCP2515_RXB1D2    = 0x78,
     MCP2515_RXB1D3    = 0x79,
@@ -199,6 +173,15 @@ typedef enum {
 esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data);
 
 /**
+ * @brief Read an MCP2515 register.
+ * @param handle          Handle of the MCP2515 device
+ * @param mcp2515Register Register to read
+ * @param data            Pointer to a memory location which receives the data
+ * @attention This function does not validate arguments and should only be called from within the driver.
+ */
+esp_err_t unchecked_mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data);
+
+/**
  * @brief Read multiple MCP2515 registers in sequence.
  * @param handle          Handle of the MCP2515 device
  * @param mcp2515Register Register to start reading
@@ -207,12 +190,30 @@ esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_re
 esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, uint8_t* data, const uint8_t count);
 
 /**
+ * @brief Read multiple MCP2515 registers in sequence.
+ * @param handle          Handle of the MCP2515 device
+ * @param mcp2515Register Register to start reading
+ * @param data            Pointer to a memory location which receives the data
+ * @attention This function does not validate arguments and should only be called from within the driver.
+ */
+esp_err_t unchecked_mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, uint8_t* data, const uint8_t count);
+
+/**
  * @brief Write to an MCP2515 register.
  * @param handle                Handle of the MCP2515 device
  * @param mcp2515RegisterStart  Register to write
  * @param data                  Data to write
  */
 esp_err_t mcp2515_write_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data);
+
+/**
+ * @brief Write to an MCP2515 register.
+ * @param handle                Handle of the MCP2515 device
+ * @param mcp2515RegisterStart  Register to write
+ * @param data                  Data to write
+ * @attention This function does not validate arguments and should only be called from within the driver.
+ */
+esp_err_t unchecked_mcp2515_write_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data);
 
 /**
  * @brief Write to multiple MCP2515 registers in sequence.
@@ -224,20 +225,49 @@ esp_err_t mcp2515_write_register(canbus_mcp2515_handle_t handle, const mcp2515_r
 esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, const uint8_t data[], const uint8_t count);
 
 /**
+ * @brief Write to multiple MCP2515 registers in sequence.
+ * @param handle                Handle of the MCP2515 device
+ * @param mcp2515RegisterStart  Register to start writing
+ * @param data                  Data to write
+ * @param count                 Number of bytes to write
+ * @attention This function does not validate arguments and should only be called from within the driver.
+ */
+esp_err_t unchecked_mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, const uint8_t data[], const uint8_t count);
+
+/**
  * @brief Change a set of bits in a MCP2515 register.
  * @param handle                Handle of the MCP2515 device
  * @param mcp2515RegisterStart  Register to alter
  * @param data                  Data to apply to the register
- * @param mask                 Number of bytes to read
+ * @param mask                  Number of bytes to read
  */
 esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data, const uint8_t mask);
 
+
 /**
- * @brief Send a one byte command to the MCP2515.
- * @param handle       Handle of the MCP2515 device
- * @param instruction  Instruction to send
+ * @brief Change a set of bits in a MCP2515 register.
+ * @param handle                Handle of the MCP2515 device
+ * @param mcp2515RegisterStart  Register to alter
+ * @param data                  Data to apply to the register
+ * @param mask                  Number of bytes to read
+ * @attention This function does not validate arguments and should only be called from within the driver.
  */
-esp_err_t mcp2515_send_single_byte_instruction(canbus_mcp2515_handle_t handle, const mcp2515_instruction_t instruction);
+esp_err_t unchecked_mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data, const uint8_t mask);
+
+
+/**
+ * @brief Validate an MCP2515 register value against the official list of MCP2515 registers.
+ * @param mcp2515Register Register to validate
+ * @return ESP_OK if the register is valid, or an error code if invalid.
+ */
+esp_err_t validate_mcp2515_register(const mcp2515_register_t mcp2515Register);
+
+/**
+ * @brief Dump a MCP2515 register to a string.
+ * @param instruction  Register to dump
+ * @return A string representation of the register.
+**/
+const char* dump_mcp2515_register(const mcp2515_register_t mcp2515Register);
 
 
 

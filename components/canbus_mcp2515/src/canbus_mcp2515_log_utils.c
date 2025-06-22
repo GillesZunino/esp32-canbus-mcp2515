@@ -5,7 +5,7 @@
 
 #include <esp_log.h>
 
-#include "canbus_mcp2515_utils.h"
+#include "canbus_mcp2515_log_utils.h"
 
 
 #define CASE_RETURN_STR(const) case const: return #const;

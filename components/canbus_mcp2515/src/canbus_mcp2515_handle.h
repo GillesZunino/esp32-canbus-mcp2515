@@ -12,6 +12,7 @@ extern "C" {
 #endif
 
 
+
 /**
  * @brief Internal structure to represent our connection to an MCP2515 device.
  * @attention This structure is internal and must not be accessed directly.
@@ -24,6 +25,14 @@ typedef struct canbus_mcp2515 {
     mcp2515_events_config_t events_config;
     spi_device_handle_t spi_device_handle;
 } canbus_mcp2515_t;
+
+
+/**
+ * @brief Validate the MCP2515 handle.
+ * @param handle Handle to validate
+ * @return ESP_OK if the handle is valid, or an error code if invalid.
+ */
+esp_err_t validate_mcp2515_handle(canbus_mcp2515_handle_t handle);
 
 
 

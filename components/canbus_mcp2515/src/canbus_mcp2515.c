@@ -127,7 +127,7 @@ esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle) {
     //   * MOSI | 0xC0 |
     //   * MISO | N/A  |
     //
-    return mcp2515_send_single_byte_instruction(handle, MCP2515_INSTRUCTION_RESET);
+    return unchecked_mcp2515_send_single_byte_instruction(handle, MCP2515_INSTRUCTION_RESET);
 }
 
 esp_err_t canbus_mcp2515_register_events_callback(canbus_mcp2515_handle_t handle, const mcp2515_events_config_t* const config) {

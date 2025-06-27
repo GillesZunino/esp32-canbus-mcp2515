@@ -272,9 +272,11 @@ esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_
 }
 
 esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable) {
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+
     // Configure OSM via CANCTRL (CANCTRL[3])
-    uint8_t canctrl = enable ? 0x04 : 0x00;
-    return mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x03);
+    uint8_t canctrl = enable ? 0x08 : 0x00;
+    return unchecked_mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x08);
 }
 
 esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const mcp2515_bit_timing_config_t* bitTimingConfig) {

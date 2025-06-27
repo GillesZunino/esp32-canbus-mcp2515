@@ -280,23 +280,56 @@ esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool e
 }
 
 esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const mcp2515_bit_timing_config_t* bitTimingConfig) {
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_FALSE(bitTimingConfig != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'bitTimingConfig' must not be NULL");
+
+    // Validate individual bit timing configuration parameters
     if ((bitTimingConfig->bit_rate_prescaler < 1) || (bitTimingConfig->bit_rate_prescaler > 64)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'bitTimingConfig.bit_rate_prescaler' must be between 1 and 64");
+#endif
         return ESP_ERR_INVALID_ARG;
     }
 
     if ((bitTimingConfig->sjw < 1) || (bitTimingConfig->sjw > 4)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'bitTimingConfig.sjw' must be between 1 and 4");
+#endif
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if ((bitTimingConfig->btl_mode != MCP2515_BTL_MODE_EXPLICIT) && (bitTimingConfig->btl_mode != MCP2515_BTL_MODE_GREATER_THAN_PS1_AND_IPT)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'bitTimingConfig.btl_mode' must be either MCP2515_BTL_MODE_EXPLICIT or MCP2515_BTL_MODE_GREATER_THAN_PS1_AND_IPT");
+#endif
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if ((bitTimingConfig->sample_mode != MCP2515_SAMPLING_MODE_ONCE) && (bitTimingConfig->sample_mode != MCP2515_SAMPLING_MODE_THREE)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'bitTimingConfig.sample_mode' must be either MCP2515_SAMPLING_MODE_ONCE or MCP2515_SAMPLING_MODE_THREE");
+#endif
         return ESP_ERR_INVALID_ARG;
     }
 
     if ((bitTimingConfig->propagation_seg < 1) || (bitTimingConfig->propagation_seg > 8)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'bitTimingConfig.propagation_seg' must be between 1 and 8");
+#endif
         return ESP_ERR_INVALID_ARG;
     }
 
     if ((bitTimingConfig->phase_seg1 < 1) || (bitTimingConfig->phase_seg1 > 8)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'bitTimingConfig.phase_seg1' must be between 1 and 8");
+#endif
         return ESP_ERR_INVALID_ARG;
     }
 
     if ((bitTimingConfig->phase_seg2 < 1) || (bitTimingConfig->phase_seg2 > 8)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'bitTimingConfig.phase_seg2' must be between 1 and 8");
+#endif
         return ESP_ERR_INVALID_ARG;
     }
 
@@ -322,14 +355,14 @@ esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const
 #endif
     
     // Take exclusive access of the SPI bus during configuration
-    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "Unable to acquire SPI bus");
     
         // Apply bit timing configuration - First CNF3 modify
-        esp_err_t err = mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, 0x07);
+        esp_err_t err = unchecked_mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, 0x07);
         if (err == ESP_OK) {
             // Then CNF2 and CNF1 with register address auto increment
             uint8_t cnf2_cnf1[] = { cnf2, cnf1 };
-            err = mcp2515_write_registers(handle, MCP2515_CNF2, cnf2_cnf1, sizeof(cnf2_cnf1) / sizeof(cnf2_cnf1[0]));
+            err = unchecked_mcp2515_write_registers(handle, MCP2515_CNF2, cnf2_cnf1, sizeof(cnf2_cnf1) / sizeof(cnf2_cnf1[0]));
         }
 
     // Release access to the SPI bus

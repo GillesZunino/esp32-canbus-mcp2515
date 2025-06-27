@@ -35,6 +35,8 @@ static esp_err_t internal_shutdown_mcp2515_interrupts(canbus_mcp2515_handle_t ha
 static esp_err_t mcp2515_start_interrupt_dispatcher_task();
 static esp_err_t mcp2515_stop_interrupt_dispatcher_task();
 
+static esp_err_t unchecked_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* pMode);
+
 static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config);
 
 static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp2515_handle_t handle);
@@ -228,10 +230,10 @@ esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_
     ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
     ESP_RETURN_ON_FALSE(mode != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'mode' must not be NULL'");
 
-    return internal_mcp2515_get_mode(handle, mode);
+    return unchecked_mcp2515_get_mode(handle, mode);
 }
 
-static esp_err_t internal_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* mode) {
+static esp_err_t unchecked_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* mode) {
     uint8_t canStat = 0;
     esp_err_t err = unchecked_mcp2515_read_register(handle, MCP2515_CANSTAT, &canStat);
     if (err == ESP_OK) {
@@ -243,22 +245,23 @@ static esp_err_t internal_mcp2515_get_mode(const canbus_mcp2515_handle_t handle,
 
 esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_mode_t mode, const TickType_t modeChangeDelay) {
     ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_FALSE((mode >= MCP2515_MODE_NORMAL) && (mode <= MCP2515_MODE_CONFIG), ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'mode' must be a value from mcp2515_mode_t");
+    ESP_RETURN_ON_FALSE((modeChangeDelay > 0) && (modeChangeDelay <= portMAX_DELAY), ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'modeChangeDelay' must be > 0 and <= portMAX_DELAY");
 
-    // Try to set the desired mode - The mode will not change until all send / receive have completed
-    esp_err_t err = mcp2515_modify_register(handle, MCP2515_CANCTRL, mode << 5, 0xE0);
+    // Try to set the desired mode - The mode will not change until all pending message transmissions are complete (see 10.0 in datasheet)
+    esp_err_t err = unchecked_mcp2515_modify_register(handle, MCP2515_CANCTRL, mode << 5, 0xE0);
     if (err == ESP_OK) {
         vTaskDelay(modeChangeDelay);
 
-        uint8_t canStat = 0;
-        err = unchecked_mcp2515_read_register(handle, MCP2515_CANSTAT, &canStat);
+        mcp2515_mode_t modeNow;
+        err = unchecked_mcp2515_get_mode(handle, &modeNow);
         if (err == ESP_OK) {
-            uint8_t opMd = canStat >> 5;
-            bool currentModeMatchesDesired = opMd == mode;
+            bool currentModeMatchesDesired = modeNow == mode;
             if (!currentModeMatchesDesired) {
 #ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
-                ESP_LOGE(CanBusMCP2515LogTag, "Failed to set MCP2515 mode to '%s', current mode is '%s'", dump_mcp2515_mode(mode), dump_mcp2515_mode(opMd));
+                ESP_LOGE(CanBusMCP2515LogTag, "Failed to set MCP2515 mode to '%s', current mode is '%s'", dump_mcp2515_mode(mode), dump_mcp2515_mode(modeNow));
 #else
-                ESP_LOGE(CanBusMCP2515LogTag, "Failed to set MCP2515 mode to %d, current mode is %d", mode, opMd);
+                ESP_LOGE(CanBusMCP2515LogTag, "Failed to set MCP2515 mode to %d, current mode is %d", mode, modeNow);
 #endif
             }
             return currentModeMatchesDesired ? ESP_OK : ESP_FAIL;
@@ -890,7 +893,7 @@ static esp_err_t internal_check_mcp2515_config(const mcp2515_config_t* config) {
 
 static esp_err_t internal_check_mcp2515_in_configuration_mode(const canbus_mcp2515_handle_t handle) {
     mcp2515_mode_t mode;
-    esp_err_t err = internal_mcp2515_get_mode(handle, &mode);
+    esp_err_t err = unchecked_mcp2515_get_mode(handle, &mode);
     if (err == ESP_OK) {
 #if CONFIG_MCP2515_ENABLE_DEBUG_LOG
         ESP_LOGI(CanBusMCP2515LogTag, "MCP2515 current mode '%s'", dump_mcp2515_mode(mode));

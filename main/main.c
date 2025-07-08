@@ -109,15 +109,15 @@ void app_main(void) {
     ESP_ERROR_CHECK(canbus_mcp2515_reset(can_mcp2515_handle));
 
     // Configure low pass filter for wake-up
-    ESP_LOGI(TAG, "Configure MCP2515 Wake-up low pass filter");
+    ESP_LOGI(TAG, "Configure MCP2515 Wake-up low pass filter enabled");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_wakeup_lowpass_filter(can_mcp2515_handle, MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED));
 
-    // Configure the MCP2515 CLKOUT pin
+    // Configure the MCP2515 CLKOUT pin for CLKOUT with a prescaler of 4
     mcp2515_clkout_sof_config_t clkoutSofConfig = {
-        .mode = MCP2515_CLKOUT_PIN_OFF,
+        .mode = MCP2515_CLKOUT_PIN_CLKOUT,
         .prescaler = MCP2515_CLKOUT_DIVIDER_4
     };
-    ESP_LOGI(TAG, "Configure MCP2515 CLKOUT/SOF pin");
+    ESP_LOGI(TAG, "Configure MCP2515 CLKOUT/SOF pin to CLKOUT with fOSC / 4");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_clkout_sof(can_mcp2515_handle, &clkoutSofConfig));
 
     // Configure MCP2515 TXnRST pins behavior

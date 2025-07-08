@@ -494,7 +494,6 @@ esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, co
     // MCP2515 needs to be in configuration mode to change CNF3
     ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
-
     // Is pin CLKOUT/SOF enabled (for either CLK OUT or SOF) or disabled (set to High Z)?
     bool enable_clkout_sof_pin = (config->mode == MCP2515_CLKOUT_PIN_SOF) || (config->mode == MCP2515_CLKOUT_PIN_CLKOUT);
 
@@ -529,22 +528,35 @@ esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, co
 }
 
 esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const mcp2515_txnrts_pins_config_t* config) {
-    // Handle must have been initialized, which means we have configured the SPI device
-    if (handle->spi_device_handle == NULL) {
-        return ESP_ERR_INVALID_STATE;
-    }
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_FALSE(config != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'config' must not be NULL");
 
-    // Options need to be specified
-    if (config == NULL) {
+    // Validate txnrts configurations
+    if ((config->tx0rts_mode < MCP2515_TXnRTS_PIN_REQUEST_TO_SEND) || (config->tx0rts_mode > MCP2515_TXnRTS_PIN_DIGITAL_INPUT)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'config.tx0rts_mode' must be a member of 'mcp2515_txnrts_pin_mode_t'");
+#endif
+        return ESP_ERR_INVALID_ARG;
+    }
+    if ((config->tx1rts_mode < MCP2515_TXnRTS_PIN_REQUEST_TO_SEND) || (config->tx1rts_mode > MCP2515_TXnRTS_PIN_DIGITAL_INPUT)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'config.tx1rts_mode' must be a member of 'mcp2515_txnrts_pin_mode_t'");
+#endif
+        return ESP_ERR_INVALID_ARG;
+    }
+    if ((config->tx2rts_mode < MCP2515_TXnRTS_PIN_REQUEST_TO_SEND) || (config->tx2rts_mode > MCP2515_TXnRTS_PIN_DIGITAL_INPUT)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'config.tx2rts_mode' must be a member of 'mcp2515_txnrts_pin_mode_t'");
+#endif
         return ESP_ERR_INVALID_ARG;
     }
 
     // MCP2515 needs to be in configuration mode to change TXRTSCTRL
     ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
-    // Configure TXRTSCTRL via TXRTSCTRL[2:0]
-    uint8_t txrtsctrl = (config->tx0rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 1 : 0) | (config->tx1rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 2 : 0) | (config->tx2rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 4 : 0);
-    return mcp2515_modify_register(handle, MCP2515_TXRTSCTRL, txrtsctrl, 0x07);
+    // Configure BnRTSM[2:0] via TXRTSCTRL[2:0]
+    uint8_t txrtsctrl = (config->tx0rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 0x01 : 0) | (config->tx1rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 0x02 : 0) | (config->tx2rts_mode == MCP2515_TXnRTS_PIN_REQUEST_TO_SEND ? 0x04 : 0);
+    return unchecked_mcp2515_modify_register(handle, MCP2515_TXRTSCTRL, txrtsctrl, 0x07);
 }
 
 esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txrts) {

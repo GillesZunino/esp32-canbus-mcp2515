@@ -120,13 +120,13 @@ void app_main(void) {
     ESP_LOGI(TAG, "Configure MCP2515 CLKOUT/SOF pin to CLKOUT with fOSC / 4");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_clkout_sof(can_mcp2515_handle, &clkoutSofConfig));
 
-    // Configure MCP2515 TXnRST pins behavior
+    // Configure MCP2515 TXnRTS pins behavior
     mcp2515_txnrts_pins_config_t txnrtsConfig = {
         .tx0rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT,
         .tx1rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT,
         .tx2rts_mode = MCP2515_TXnRTS_PIN_DIGITAL_INPUT
     };
-    ESP_LOGI(TAG, "Configure MCP2515 TXnRST pins to digital input");
+    ESP_LOGI(TAG, "Configure MCP2515 TXnRTS[0..2] pins as digital input");
     ESP_ERROR_CHECK(canbus_mcp2515_configure_txnrts(can_mcp2515_handle, &txnrtsConfig));
 
     // Configure MCP2515 RXnBF pins behavior

@@ -456,7 +456,7 @@ esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t
 esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
 
 /**
- * @brief Configure MCP2515 TXnRST pins behavior.
+ * @brief Configure MCP2515 TXnRTS pins behavior.
  * @param handle    Handle of the MCP2515 device
  * @param config   TXnRTS pins mode
  */

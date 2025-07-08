@@ -235,6 +235,8 @@ esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_
 
 static esp_err_t unchecked_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* mode) {
     uint8_t canStat = 0;
+
+    // Retrieve OPMOD[2:0] via CANSTAT[7:5]
     esp_err_t err = unchecked_mcp2515_read_register(handle, MCP2515_CANSTAT, &canStat);
     if (err == ESP_OK) {
         *mode = (mcp2515_mode_t) canStat >> 5;
@@ -248,7 +250,8 @@ esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_
     ESP_RETURN_ON_FALSE((mode >= MCP2515_MODE_NORMAL) && (mode <= MCP2515_MODE_CONFIG), ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'mode' must be a value from mcp2515_mode_t");
     ESP_RETURN_ON_FALSE((modeChangeDelay > 0) && (modeChangeDelay <= portMAX_DELAY), ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'modeChangeDelay' must be > 0 and <= portMAX_DELAY");
 
-    // Try to set the desired mode - The mode will not change until all pending message transmissions are complete (see 10.0 in datasheet)
+    // Configure mode REQOP[2:0] via CANCTRL[7:5]
+    // NOTE: The mode will not change until all pending message transmissions are complete (see 10.0 in datasheet)
     esp_err_t err = unchecked_mcp2515_modify_register(handle, MCP2515_CANCTRL, mode << 5, 0xE0);
     if (err == ESP_OK) {
         vTaskDelay(modeChangeDelay);
@@ -274,7 +277,7 @@ esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_
 esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable) {
     ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
 
-    // Configure OSM via CANCTRL (CANCTRL[3])
+    // Configure OSM via CANCTRL[3]
     uint8_t canctrl = enable ? 0x08 : 0x00;
     return unchecked_mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x08);
 }
@@ -459,11 +462,7 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
 
 esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t handle, mcp2515_wakeup_lowpass_filter_t filter) {
     ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
-
-    // Validate configuration
-    if ((filter != MCP2515_WAKEUP_LOWPASS_FILTER_DISABLED) && (filter != MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED)) {
-        return ESP_ERR_INVALID_ARG;
-    }
+    ESP_RETURN_ON_FALSE((filter >= MCP2515_WAKEUP_LOWPASS_FILTER_DISABLED) && (filter <= MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED), ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'filter' must be a value from mcp2515_wakeup_lowpass_filter_t");
 
     // MCP2515 needs to be in configuration mode to change CNF3
     ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
@@ -474,30 +473,52 @@ esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t
 }
 
 esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config) {
-    // Options need to be specified
-    if (config == NULL) {
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_FALSE(config != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'config' must not be NULL");
+
+    // Validate CLKOUT configuration
+    if ((config->mode < MCP2515_CLKOUT_PIN_OFF) || (config->mode > MCP2515_CLKOUT_PIN_CLKOUT)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'config.mode' must be a member of 'mcp2515_clkout_sof_config_t'");
+#endif
         return ESP_ERR_INVALID_ARG;
     }
 
-    // CLKOUT/SOF requires the pin to be enabled if it is to be used for any signal
-    bool enable_clkoutPin = (config->mode == MCP2515_CLKOUT_PIN_SOF) || (config->mode == MCP2515_CLKOUT_PIN_CLKOUT);
-
-    // Configure CLKOUT pin via CLKEN (CANCTRL[2]) and CLKPRE (CANCTRL[1:0])
-    uint8_t canctrl = (enable_clkoutPin ? 0x04 : 0x00) | (config->mode == MCP2515_CLKOUT_PIN_CLKOUT ? config->prescaler & 0x03 : 0);
-
-    // CNF3[7] is CLKOUT/SOF pin enable bit
-    uint8_t cnf3 = config->mode == MCP2515_CLKOUT_PIN_SOF ? 0x80 : 0x00;
+    if ((config->prescaler < MCP2515_CLKOUT_DIVIDER_1) || (config->prescaler > MCP2515_CLKOUT_DIVIDER_8)) {
+#ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
+        ESP_LOGE(CanBusMCP2515LogTag, "'config.prescaler' must be a mmber of 'mcp2515_clkout_prescaler_t'");
+#endif
+        return ESP_ERR_INVALID_ARG;
+    }
 
     // MCP2515 needs to be in configuration mode to change CNF3
     ESP_RETURN_ON_ERROR(internal_check_mcp2515_in_configuration_mode(handle), CanBusMCP2515LogTag, "MCP2515 is not in configuration mode");
 
-    // Take exclusive access of the SPI bus during configuration
-    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "%s() Unable to acquire SPI bus", __func__);
 
-        // Apply CLKOUT / SOF configuration - First CANCTRL to enable / disable the CLKOUT/SOF pin
-        esp_err_t err = mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, 0x07);
+    // Is pin CLKOUT/SOF enabled (for either CLK OUT or SOF) or disabled (set to High Z)?
+    bool enable_clkout_sof_pin = (config->mode == MCP2515_CLKOUT_PIN_SOF) || (config->mode == MCP2515_CLKOUT_PIN_CLKOUT);
+
+    // We ignore the prescaler configuration if the pin is set to SOF or High Z
+    // Configure "CLKOUT/SOF enabled" CLKEN[2] via CANCTRL[2] ...
+    uint8_t canctrl_mask = 0x04;
+    uint8_t canctrl = (enable_clkout_sof_pin ? 0x04 : 0x00) | (config->mode == MCP2515_CLKOUT_PIN_CLKOUT ? config->prescaler & 0x03 : 0);
+
+    // ... and "CLKOUT Pre-Scaler" CLKPRE[1:0] via CANCTRL[1:0]
+    if (config->mode == MCP2515_CLKOUT_PIN_CLKOUT) {
+        canctrl |= (config->prescaler & 0x03);
+        canctrl_mask |= 0x03;
+    }
+
+    // Configure pin CLKOUT / SOF function (either CLK OUT or SOF) SOF via CNF3[7]
+    uint8_t cnf3 = config->mode == MCP2515_CLKOUT_PIN_SOF ? 0x80 : 0x00;
+
+    // Take exclusive access of the SPI bus during configuration
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_device_handle, portMAX_DELAY), CanBusMCP2515LogTag, "Unable to acquire SPI bus");
+
+        // Apply CLKOUT / SOF pin configuration - First CANCTRL to enable / disable the CLKOUT/SOF pin and to configure prescaler (if applicable)
+        esp_err_t err = mcp2515_modify_register(handle, MCP2515_CANCTRL, canctrl, canctrl_mask);
         if (err == ESP_OK) {
-            // Then CNF3 to enable / disable the CLKOUT/SOF pin
+            // Then CNF3 configure the function of CLKOUT/SOF pin
             err = mcp2515_modify_register(handle, MCP2515_CNF3, cnf3, 0x80);
         }
 

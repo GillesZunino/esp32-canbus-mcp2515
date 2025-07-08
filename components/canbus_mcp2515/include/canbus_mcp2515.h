@@ -384,8 +384,8 @@ esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, m
 /**
  * @brief Get the operation mode of the MCP2515 device.
  * @param handle    Handle of the MCP2515 device
- * @param mode     Pointer to a memory location which receives the mode
- * @return 
+ * @param mode      Pointer to a memory location which receives the mode
+ * @return
  *       - ESP_OK:                On success
  *       - ESP_ERR_INVALID_STATE: MCP2515 device is not in use
  *       - ESP_ERR_INVALID_ARG:   Invalid argument
@@ -394,6 +394,16 @@ esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_
 
 /**
  * @brief Set the operation mode of the MCP2515 device.
+ * @param handle            Handle of the MCP2515 device
+ * @param mode              Mode to set
+ * @param modeChangeDelay   Delay to wait for the mode to change
+ * @return
+ *       - ESP_OK:                When the requested mode is set after the specified delay
+ *       - ESP_FAIL:              When the requested mode is not set after the specified delay
+ *       - ESP_ERR_INVALID_STATE: MCP2515 device is not in use
+ *       - ESP_ERR_INVALID_ARG:   Invalid argument
+ * @attention: The mode will not change until all pending message transmissions are complete (see 10.0 in datasheet).
+ *          The function will wait for the specified amount of time and check the mode against the requested mode. 
  */
 esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_mode_t mode, const TickType_t modeChangeDelay);
 
@@ -432,9 +442,16 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
 esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t handle, mcp2515_wakeup_lowpass_filter_t filter);
 
 /**
- * @brief Configure MCP2515 CLKOUT pin behavior.
+ * @brief Configure MCP2515 CLKOUT/SOF pin behavior to either "HIGH Z", "CLOCK OUT" or "START OF FRAME".
+ *        Also configures the prescaler value when "CLOCK OUT" is specified.
+ * @note The prescaler configuration mcp2515_clkout_sof_config_t.prescaler is ignored when mcp2515_clkout_sof_config_t.mode is not MCP2515_CLKOUT_PIN_SOF.
  * @param handle    Handle of the MCP2515 device
  * @param config    CLKOUT/SOF pin configuration
+ * @return
+ *       - ESP_OK:                When the requested configuration was applied with success
+ *       - ESP_FAIL:              When the requested configuration could not be applied
+ *       - ESP_ERR_INVALID_STATE: MCP2515 device is not in use
+ *       - ESP_ERR_INVALID_ARG:   Invalid argument
  */
 esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config);
 

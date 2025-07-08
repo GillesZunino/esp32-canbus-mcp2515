@@ -560,11 +560,11 @@ esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const 
 }
 
 esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txrts) {
-    if (txrts == NULL) {
-        return ESP_ERR_INVALID_ARG;
-    }
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_FALSE(txrts != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'txrts' must not be NULL");
 
     uint8_t stagedTxrts;
+    // Retrieve BnRTS[3:5] via TXRTSCTRL[3:5]
     esp_err_t err = unchecked_mcp2515_read_register(handle, MCP2515_TXRTSCTRL, &stagedTxrts);
     if (err == ESP_OK) {
         *txrts = (stagedTxrts >> 3) & 0x07;

@@ -369,7 +369,9 @@ static esp_err_t internal_validate_mcp2515_multi_registers_datacount(const mcp25
     bool isCountValid = (count > 0) && (count <= registersCount);
 
 #ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
-    ESP_LOGE(CanBusMCP2515LogTag, "'count' (%d) is invalid. When starting at [%s], 'count' must be > 0 and <= %d", count, dump_mcp2515_register(mcp2515RegisterStart), registersCount);
+    if (!isCountValid) {
+        ESP_LOGE(CanBusMCP2515LogTag, "'count' (%d) is invalid. When starting at [%s], 'count' must be > 0 and <= %d", count, dump_mcp2515_register(mcp2515RegisterStart), registersCount);
+    }
 #endif
 
     return isCountValid ? ESP_OK : ESP_ERR_INVALID_ARG;

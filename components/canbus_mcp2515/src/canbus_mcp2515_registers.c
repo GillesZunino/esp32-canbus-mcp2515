@@ -201,7 +201,9 @@ esp_err_t validate_mcp2515_register(const mcp2515_register_t mcp2515Register) {
     bool validRegister = (mcp2515Register >= MCP2515_RXF0SIDH) && (mcp2515Register <= MCP2515_RXB1D7);
 
 #ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
-    ESP_LOGE(CanBusMCP2515LogTag, "'mcp2515Register' %d is invalid", mcp2515Register);
+    if (!validRegister) {
+        ESP_LOGE(CanBusMCP2515LogTag, "'mcp2515Register' %d is invalid", mcp2515Register);
+    }
 #endif
 
     return  validRegister ? ESP_OK : ESP_ERR_INVALID_ARG;

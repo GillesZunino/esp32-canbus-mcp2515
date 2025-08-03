@@ -704,26 +704,26 @@ esp_err_t canbus_mcp2515_transmit(canbus_mcp2515_handle_t handle, const can_fram
     // TODO: Do we even need to send RTS ? We might not if the pins were configured to fire the message
     // Select the correct transmit register and RTS instruction to send
     mcp2515_register_t controlRegister;
-    mcp2515_register_t idRegister;
+    //mcp2515_register_t idRegister;
     mcp2515_register_t dataRegister;
     mcp2515_instruction_t rtsInstruction;
     switch (effectiveTXn) {
         case MCP2515_TXB0:
             controlRegister = MCP2515_TXB0CTRL;
-            idRegister = MCP2515_TXB0SIDH;
-            dataRegister = MCP2515_TXB0DO;
+            //idRegister = MCP2515_TXB0SIDH;
+            dataRegister = MCP2515_TXB0D0;
             rtsInstruction = MCP2515_INSTRUCTION_RTS_TX0;
             break;
         case MCP2515_TXB1:
             controlRegister = MCP2515_TXB1CTRL;
-            idRegister = MCP2515_TXB1SIDH;
-            dataRegister = MCP2515_TXB1DO;
+            //idRegister = MCP2515_TXB1SIDH;
+            dataRegister = MCP2515_TXB1D0;
             rtsInstruction = MCP2515_INSTRUCTION_RTS_TX1;
             break;
         case MCP2515_TXB2:
             controlRegister = MCP2515_TXB2CTRL;
-            idRegister = MCP2515_TXB2SIDH;
-            dataRegister = MCP2515_TXB2DO;
+            //idRegister = MCP2515_TXB2SIDH;
+            dataRegister = MCP2515_TXB2D0;
             rtsInstruction = MCP2515_INSTRUCTION_RTS_TX2;
             break;
         default:
@@ -816,11 +816,11 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
     switch (receiveBuffer) {
         case MCP2515_RECEIVE_RXB0:
             controlRegister = MCP2515_RXB0CTRL;
-            dataRegister = MCP2515_RXB0DO;
+            dataRegister = MCP2515_RXB0D0;
             break;
         case MCP2515_RECEIVE_RXB1:
             controlRegister = MCP2515_RXB1CTRL;
-            dataRegister = MCP2515_RXB1DO;
+            dataRegister = MCP2515_RXB1D0;
             break;
         default:
             return ESP_ERR_INVALID_ARG;
@@ -911,29 +911,6 @@ esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, eflg_t*
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}
-
-
-
-}
 
 
 

@@ -144,10 +144,10 @@ const char* dump_mcp2515_mode(mcp2515_mode_t mode) {
 
 const char* dump_transmit_priority(mcp2515_transmit_priority_t priority) {
     switch (priority) {
-        CASE_RETURN_STR(MCP1515_TRANSMIT_PRIORITY_LOW)
-        CASE_RETURN_STR(MCP1515_TRANSMIT_PRIORITY_MEDIUM)
-        CASE_RETURN_STR(MCP1515_TRANSMIT_PRIORITY_HIGH)
-        CASE_RETURN_STR(MCP1515_TRANSMIT_PRIORITY_HIGHEST)
+        CASE_RETURN_STR(MCP2515_TRANSMIT_PRIORITY_LOW)
+        CASE_RETURN_STR(MCP2515_TRANSMIT_PRIORITY_MEDIUM)
+        CASE_RETURN_STR(MCP2515_TRANSMIT_PRIORITY_HIGH)
+        CASE_RETURN_STR(MCP2515_TRANSMIT_PRIORITY_HIGHEST)
     default:
         return "Unknown mcp2515_transmit_priority_t";
     }

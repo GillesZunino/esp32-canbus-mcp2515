@@ -50,10 +50,10 @@ typedef struct mcp2515_config {
 } mcp2515_config_t;
 
 /**
- * @brief MCP1515 BTL mode.
+ * @brief MCP2515 BTL mode.
  */
 typedef enum canbus_mcp2515_btl_mode {
-    MCP2515_BTL_MODE_EXPLICIT = 1,                  ///< Phase Segment 2 length explicitely configured
+    MCP2515_BTL_MODE_EXPLICIT = 1,                  ///< Phase Segment 2 length explicitly configured
     MCP2515_BTL_MODE_GREATER_THAN_PS1_AND_IPT = 0   ///< Phase Segment 2 length = max(Phase Segment 1, IPT)
 } canbus_mcp2515_blt_mode_t;
 
@@ -226,7 +226,7 @@ typedef struct mcp2515_receive_filter {
     union {                             ///< Filter definition
         struct {
             uint16_t id_filter;         ///< Standard ID filter. Only the least significant 11 bits are used
-            uint16_t id_mask;           ///< Standard ID mask. Only the lesat significant 11 bits are used
+            uint16_t id_mask;           ///< Standard ID mask. Only the least significant 11 bits are used
             uint16_t data_filter;       ///< Data filter. The MSB applies to frame data[0] and LSB applied to frame data[1]
             uint16_t data_mask;         ///< Data mask. The MSB applies to frame data[0] and LSB applied to frame data[1]
         } standard_frame;
@@ -276,10 +276,10 @@ typedef enum  {
 
 
 typedef enum {
-    MCP1515_TRANSMIT_PRIORITY_LOW = 0,
-    MCP1515_TRANSMIT_PRIORITY_MEDIUM = 1,
-    MCP1515_TRANSMIT_PRIORITY_HIGH = 2,
-    MCP1515_TRANSMIT_PRIORITY_HIGHEST = 3
+    MCP2515_TRANSMIT_PRIORITY_LOW = 0,
+    MCP2515_TRANSMIT_PRIORITY_MEDIUM = 1,
+    MCP2515_TRANSMIT_PRIORITY_HIGH = 2,
+    MCP2515_TRANSMIT_PRIORITY_HIGHEST = 3
 } mcp2515_transmit_priority_t;
 
 /**
@@ -408,7 +408,7 @@ esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_
 esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_mode_t mode, const TickType_t modeChangeDelay);
 
 /**
- * @brief COnfigure MCP2515 one-shot mode.
+ * @brief Configure MCP2515 one-shot mode.
  * @param handle    Handle of the MCP2515 device
  * @param enable    true to enable One-Shot mode, false to disable.
  */
@@ -464,7 +464,7 @@ esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const 
 
 /**
  * @brief Read state of MCP2515 TXnRTS pins as digital inputs.
- * @note For RXnRTS pins to act as difitial input, configure the MCP2515 by calling canbus_mcp2515_set_txnrts().
+ * @note For RXnRTS pins to act as digital input, configure the MCP2515 by calling canbus_mcp2515_set_txnrts().
  * @param handle    Handle of the MCP2515 device
  * @param txrts     Pointer to a memory location which receives the state of the TXnRTS pins
  */
@@ -481,7 +481,7 @@ esp_err_t canbus_mcp2515_configure_rxnbf(canbus_mcp2515_handle_t handle,const mc
  * @brief Set the state of the MCP2515 RXnBF pins when configured as digital output.
  * @param handle    Handle of the MCP2515 device
  * @param rxnbf     RXnBF pin to set
- * @param level     Level to set, 0 for low, 1 (or non 0) bfor high
+ * @param level     Level to set, 0 for low, 1 (or non 0) for high
  */
 esp_err_t canbus_mcp2515_set_rxnbf(canbus_mcp2515_handle_t handle, mcp2515_rxnbf_pin_t rxnbf, uint32_t level);
 
@@ -549,7 +549,7 @@ esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle,
  * @param handle    Handle of the MCP2515 device
  * @param flags     Pointer to a memory location which receives the flags
  */
-esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, eflg_t* flags);
+esp_err_t canbus_mcp2515_get_error_flags(canbus_mcp2515_handle_t handle, eflg_t* flags);
 
 
 #ifdef __cplusplus

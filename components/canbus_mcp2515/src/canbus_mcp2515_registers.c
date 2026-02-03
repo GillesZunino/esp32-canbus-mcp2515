@@ -16,7 +16,7 @@ static esp_err_t internal_validate_mcp2515_multi_registers_datacount(const mcp25
 
 
 esp_err_t mcp2515_read_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, uint8_t* data) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_ERROR(validate_mcp2515_register(mcp2515Register), CanBusMCP2515LogTag, "'mcp2515Register' must be a value from mcp2515_register_t");
     ESP_RETURN_ON_FALSE(data != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'data' must not be NULL'");
 
@@ -48,7 +48,7 @@ esp_err_t unchecked_mcp2515_read_register(canbus_mcp2515_handle_t handle, const 
 }
 
 esp_err_t mcp2515_read_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, uint8_t* data, const uint8_t count) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_ERROR(validate_mcp2515_register(mcp2515RegisterStart), CanBusMCP2515LogTag, "'mcp2515RegisterStart' must be a value from mcp2515_register_t");
     ESP_RETURN_ON_FALSE(data != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'data' must not be NULL'");
     ESP_RETURN_ON_ERROR(internal_validate_mcp2515_multi_registers_datacount(mcp2515RegisterStart, count), CanBusMCP2515LogTag, "'count' is invalid");
@@ -90,7 +90,7 @@ esp_err_t unchecked_mcp2515_read_registers(canbus_mcp2515_handle_t handle, const
 }
 
 esp_err_t mcp2515_write_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_ERROR(validate_mcp2515_register(mcp2515Register), CanBusMCP2515LogTag, "'mcp2515Register' must be a value from mcp2515_register_t");
 
     return unchecked_mcp2515_write_register(handle, mcp2515Register, data);
@@ -114,7 +114,7 @@ esp_err_t unchecked_mcp2515_write_register(canbus_mcp2515_handle_t handle, const
 }
 
 esp_err_t mcp2515_write_registers(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515RegisterStart, const uint8_t data[], const uint8_t count) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_ERROR(validate_mcp2515_register(mcp2515RegisterStart), CanBusMCP2515LogTag, "'mcp2515RegisterStart' must be a value from mcp2515_register_t");
     ESP_RETURN_ON_FALSE(data != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'data' must not be NULL'");
     ESP_RETURN_ON_ERROR(internal_validate_mcp2515_multi_registers_datacount(mcp2515RegisterStart, count), CanBusMCP2515LogTag, "'count' is invalid");
@@ -147,7 +147,7 @@ esp_err_t unchecked_mcp2515_write_registers(canbus_mcp2515_handle_t handle, cons
 }
 
 esp_err_t mcp2515_modify_register(canbus_mcp2515_handle_t handle, const mcp2515_register_t mcp2515Register, const uint8_t data, const uint8_t mask) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
 
     // Ensure the register can be modified via BITMOD
     switch (mcp2515Register) {
@@ -307,7 +307,7 @@ const char* dump_mcp2515_register(const mcp2515_register_t mcp2515Register) {
         case MCP2515_TXB2SIDH:  return "TXB2SIDH";
         case MCP2515_TXB2SIDL:  return "TXB2SIDL";
         case MCP2515_TXB2EID8:  return "TXB2EID8";
-        case MCP2515_TXB2EID0:  return "MTXB2EID0";
+        case MCP2515_TXB2EID0:  return "TXB2EID0";
 
         case MCP2515_TXB2DLC:   return "TXB2DLC";
 

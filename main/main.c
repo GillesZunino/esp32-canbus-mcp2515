@@ -267,7 +267,7 @@ void app_main(void) {
             mcp2515_TXBn_t effectiveTransmitRegister = MCP2515_TXB_NONE;
             mcp2515_transmit_options_t sendOptions = {
                 .txb = MCP2515_TXB_AUTO,
-                .priority = MCP1515_TRANSMIT_PRIORITY_MEDIUM 
+                .priority = MCP2515_TRANSMIT_PRIORITY_MEDIUM
             };
 
             ESP_LOGI(TAG, "Sending frame with index %d", framesSent);
@@ -339,7 +339,7 @@ void app_main(void) {
         eflg_t eflg = {0};
         ESP_ERROR_CHECK(canbus_mcp2515_get_transmit_error_count(can_mcp2515_handle, &transmitErrorCount));
         ESP_ERROR_CHECK(canbus_mcp2515_get_receive_error_count(can_mcp2515_handle, &receiveErrorCount));
-        ESP_ERROR_CHECK(canbus_mcp1515_get_error_flags(can_mcp2515_handle, &eflg));
+        ESP_ERROR_CHECK(canbus_mcp2515_get_error_flags(can_mcp2515_handle, &eflg));
         ESP_LOGI(TAG, "MCP2515 REC: %d - TEC: %d", receiveErrorCount, transmitErrorCount);
         MCP2515_LOG_EFLG(TAG, eflg.flags, ESP_LOG_INFO);
 

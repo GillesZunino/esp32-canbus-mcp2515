@@ -112,7 +112,7 @@ void app_main(void) {
         mcp2515_TXBn_t effectiveTransmitRegister = MCP2515_TXB_NONE;
         mcp2515_transmit_options_t sendOptions = {
             .txb = MCP2515_TXB_AUTO,
-            .priority = MCP1515_TRANSMIT_PRIORITY_MEDIUM
+            .priority = MCP2515_TRANSMIT_PRIORITY_MEDIUM
         };
 
         ESP_LOGI(TAG, "Send frame with index %d", frameCount);

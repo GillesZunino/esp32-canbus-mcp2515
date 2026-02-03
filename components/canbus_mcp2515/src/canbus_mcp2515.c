@@ -89,7 +89,7 @@ cleanup:
 }
 
 esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     
     // Track the first error we encounter so we can return it to the caller - We do try to detach all aspects of the driver regardless of which step failed
     esp_err_t firstError = ESP_OK;
@@ -122,7 +122,7 @@ esp_err_t canbus_mcp2515_free(canbus_mcp2515_handle_t handle) {
 }
 
 esp_err_t canbus_mcp2515_reset(canbus_mcp2515_handle_t handle) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
 
     //
     // Reset MCP2515 - This sets configuration mode automatically
@@ -227,7 +227,7 @@ esp_err_t canbus_mcp2515_reset_interrupt_flags(canbus_mcp2515_handle_t handle, m
 
 
 esp_err_t canbus_mcp2515_get_mode(const canbus_mcp2515_handle_t handle, mcp2515_mode_t* mode) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_FALSE(mode != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'mode' must not be NULL'");
 
     return unchecked_mcp2515_get_mode(handle, mode);
@@ -246,7 +246,7 @@ static esp_err_t unchecked_mcp2515_get_mode(const canbus_mcp2515_handle_t handle
 }
 
 esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_mode_t mode, const TickType_t modeChangeDelay) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_FALSE((mode >= MCP2515_MODE_NORMAL) && (mode <= MCP2515_MODE_CONFIG), ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'mode' must be a value from mcp2515_mode_t");
     ESP_RETURN_ON_FALSE((modeChangeDelay > 0) && (modeChangeDelay <= portMAX_DELAY), ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'modeChangeDelay' must be > 0 and <= portMAX_DELAY");
 
@@ -275,7 +275,7 @@ esp_err_t canbus_mcp2515_set_mode(canbus_mcp2515_handle_t handle, const mcp2515_
 }
 
 esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool enable) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
 
     // Configure OSM via CANCTRL[3]
     uint8_t canctrl = enable ? 0x08 : 0x00;
@@ -283,7 +283,7 @@ esp_err_t canbus_mcp2515_set_oneshot_mode(canbus_mcp2515_handle_t handle, bool e
 }
 
 esp_err_t canbus_mcp2515_configure_bitrate(canbus_mcp2515_handle_t handle, const mcp2515_bit_timing_config_t* bitTimingConfig) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_FALSE(bitTimingConfig != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'bitTimingConfig' must not be NULL");
 
     // Validate individual bit timing configuration parameters
@@ -461,7 +461,7 @@ esp_err_t canbus_mcp2515_configure_receive_filter(canbus_mcp2515_handle_t handle
 }
 
 esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t handle, mcp2515_wakeup_lowpass_filter_t filter) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_FALSE((filter >= MCP2515_WAKEUP_LOWPASS_FILTER_DISABLED) && (filter <= MCP2515_WAKEUP_LOWPASS_FILTER_ENABLED), ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'filter' must be a value from mcp2515_wakeup_lowpass_filter_t");
 
     // MCP2515 needs to be in configuration mode to change CNF3
@@ -473,7 +473,7 @@ esp_err_t canbus_mcp2515_configure_wakeup_lowpass_filter(canbus_mcp2515_handle_t
 }
 
 esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, const mcp2515_clkout_sof_config_t* config) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_FALSE(config != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'config' must not be NULL");
 
     // Validate CLKOUT configuration
@@ -486,7 +486,7 @@ esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, co
 
     if ((config->prescaler < MCP2515_CLKOUT_DIVIDER_1) || (config->prescaler > MCP2515_CLKOUT_DIVIDER_8)) {
 #ifdef CONFIG_MCP2515_ENABLE_DEBUG_LOG
-        ESP_LOGE(CanBusMCP2515LogTag, "'config.prescaler' must be a mmber of 'mcp2515_clkout_prescaler_t'");
+        ESP_LOGE(CanBusMCP2515LogTag, "'config.prescaler' must be a member of 'mcp2515_clkout_prescaler_t'");
 #endif
         return ESP_ERR_INVALID_ARG;
     }
@@ -528,7 +528,7 @@ esp_err_t canbus_mcp2515_configure_clkout_sof(canbus_mcp2515_handle_t handle, co
 }
 
 esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const mcp2515_txnrts_pins_config_t* config) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_FALSE(config != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'config' must not be NULL");
 
     // Validate txnrts configurations
@@ -560,7 +560,7 @@ esp_err_t canbus_mcp2515_configure_txnrts(canbus_mcp2515_handle_t handle, const 
 }
 
 esp_err_t canbus_mcp2515_get_txnrts(canbus_mcp2515_handle_t handle, uint8_t* txrts) {
-    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' in invalid");
+    ESP_RETURN_ON_ERROR(validate_mcp2515_handle(handle), CanBusMCP2515LogTag, "'handle' is invalid");
     ESP_RETURN_ON_FALSE(txrts != NULL, ESP_ERR_INVALID_ARG, CanBusMCP2515LogTag, "'txrts' must not be NULL");
 
     uint8_t stagedTxrts;
@@ -864,7 +864,7 @@ esp_err_t canbus_mcp2515_receive(canbus_mcp2515_handle_t handle, mcp2515_receive
 
         //
         // Populate filters hit - A filter can only be hit if the MCP2515 is not in 'special receive' mode (RXBnCTRL[6:5] not 11)
-        // NOTE: The MCP1515 does not offer a way to disable filtering and a filter is always hit when a frame is received
+        // NOTE: The MCP2515 does not offer a way to disable filtering and a filter is always hit when a frame is received
         //       It is possible to set RXMn to 0 to indicate that no bit in the filter matter and accept any valid message
         // NOTE: In rollover mode, RXF0 might be hit even though we are processing RXB1
         //
@@ -900,7 +900,7 @@ esp_err_t canbus_mcp2515_get_receive_error_count(canbus_mcp2515_handle_t handle,
     return mcp2515_read_register(handle, MCP2515_REC, count);
 }
 
-esp_err_t canbus_mcp1515_get_error_flags(canbus_mcp2515_handle_t handle, eflg_t* flags) {
+esp_err_t canbus_mcp2515_get_error_flags(canbus_mcp2515_handle_t handle, eflg_t* flags) {
     return mcp2515_read_register(handle, MCP2515_EFLG, &flags->flags);
 }
 

@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include <freertos/FreeRTOS.h>
 #include <esp_err.h>
 #include <driver/spi_master.h>
 #include <driver/gpio.h>

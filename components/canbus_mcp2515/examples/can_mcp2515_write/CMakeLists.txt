@@ -1,6 +1,6 @@
 # For more information about build system see
 # https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.30)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(can_mcp2515_write)

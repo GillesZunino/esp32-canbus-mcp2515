@@ -12,9 +12,10 @@ set(srcs
 )
 
 idf_component_register(SRCS ${srcs}
-                       INCLUDE_DIRS "include"
-                       LDFRAGMENTS "canbus_mcp2515.lf"
-                       REQUIRES "driver esp_driver_gpio")
+    INCLUDE_DIRS "include"
+    LDFRAGMENTS "canbus_mcp2515.lf"
+    REQUIRES esp_driver_gpio esp_driver_spi
+)
 
 
 if(CONFIG_MCP2515_SANITIZER)
